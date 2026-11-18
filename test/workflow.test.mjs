@@ -11,7 +11,7 @@ function client(){
     const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store);
     return [r.status,await r.json()];
   }
-  return {call,env};
+  return {call,env,store};
 }
 test('reviewer flow checkpoints, resumes, asks approval, cites reproducible numbers and recalls preferences',async()=>{
   const {call}=client();let [s,t]=await call('threads',payload);assert.equal(s,201);const path='threads/'+t.id;
@@ -50,4 +50,30 @@ test('skipping optional expansion preserves the original research scope and data
   const {call}=client();let t=(await call('threads',payload))[1],url='threads/'+t.id;
   for(const act of ['step','step','step','step','step','skip','step'])t=(await call(url+'/'+act,{revision:t.revision}))[1];
   assert.equal(t.status,'complete');assert.equal(t.metrics.calls,2);assert.equal(t.report.facts.length,2);
+});
+
+test('live follow-ups use thread evidence and retain context; invalid citations fail',async()=>{
+  const {call,env,store}=client();
+  const [,thread]=await call('threads',{...payload,mode:'live'});
+  thread.report={facts:[],title:'历史复盘'};
+  thread.status='complete';
+  thread.evidence=[{id:'E1',raw:{points:[{date:'2025-03-21',close:100}]}}];
+  const path='threads/'+thread.id;
+  await store.put('thread/'+thread.id,thread);
+  env.DEEPSEEK_API_KEY='test-only';
+  const contexts=[];
+  let ref='E1';
+  env.fetch=async(_url,options)=>{
+    contexts.push(JSON.parse(JSON.parse(options.body).messages[1].content));
+    const content=JSON.stringify({status:'answered',answer:'该点位来自收盘序列。',refs:[ref]});
+    return Response.json({model:'test-model',usage:{total_tokens:12},choices:[{finish_reason:'stop',message:{content}}]});
+  };
+  assert.equal((await call(path+'/followup',{question:'这条曲线最左端代表什么？'}))[0],200);
+  assert.deepEqual(contexts[0].evidence,thread.evidence);
+  ref='E999';
+  assert.equal((await call(path+'/followup',{question:'那个点的依据呢？'}))[0],502);
+  assert.equal(contexts[1].history.length,1);
+  const [,saved]=await call(path);
+  assert.equal(saved.followups.length,1);
+  assert.equal(saved.metrics.calls,2);
 });

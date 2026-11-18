@@ -181,14 +181,14 @@ function paintChart(t){
   ctx.fillStyle='#596c62';ctx.fillText(String(series[0].date).slice(5),left,h-7);ctx.textAlign='right';ctx.fillText(String(series.at(-1).date).slice(5),right,h-7);
 }
 function followupMarkup(t){
-  const reply=state.replies.get(t.id);
+  const reply=t.followups?.at(-1)||state.replies.get(t.id);
   return '<form class="followup" id="followup"><label class="field"><span>追问这份简报</span><input type="text" id="question" required maxlength="300" placeholder="例如，本次复盘使用了哪些日期？"></label><button class="secondary" type="submit">核查证据</button></form>'+
     (reply?'<div class="message" role="status"><strong>'+e(reply.question)+'</strong><p>'+e(reply.answer)+'</p>'+(reply.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')+'</div>':'');
 }
 document.addEventListener('submit',async ev=>{
   if(ev.target.id!=='followup')return;ev.preventDefault();const question=byId('question').value.trim(),t=state.thread,epoch=state.epoch;if(!question||!t)return;
   const btn=ev.target.querySelector('button');btn.disabled=true;btn.textContent='核查中…';
-  try{const reply=await request('threads/'+encodeURIComponent(t.id)+'/followup',{question});state.replies.set(t.id,{...reply,question});if(state.epoch===epoch){detail();byId('question')?.focus();}}
+  try{const reply=await request('threads/'+encodeURIComponent(t.id)+'/followup',{question});state.replies.set(t.id,{...reply,question});if(state.epoch===epoch){await syncThread(t.id,epoch);byId('question')?.focus();}}
   catch(err){showNotice(err.message);btn.disabled=false;btn.textContent='核查证据';}
 });
 let resizeTimer;
