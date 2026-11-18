@@ -23,7 +23,7 @@ function store(owner){
 const mime={'.html':'text/html','.css':'text/css','.js':'application/javascript','.svg':'image/svg+xml'};
 const server=createServer(async (req,res)=>{
   try{
-    const host=req.headers.host||'localhost',url=new URL(req.url,'http://'+host),path=url.pathname;
+    const host=req.headers.host||'localhost',url=new URL(req.url,process.env.RENDER_EXTERNAL_URL||'http://'+host),path=url.pathname;
     if(path.startsWith('/api/')){
       const existing=(req.headers.cookie||'').match(/(?:^|;\s*)xb_owner=([0-9a-f-]{36})(?:;|$)/)?.[1],owner=existing||randomUUID();
       if(!existing)res.setHeader('Set-Cookie','xb_owner='+owner+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000');

@@ -11,4 +11,8 @@ for (const [name, pattern] of Object.entries(fields)) {
   if (!value) throw new Error('本地启动缺少 ' + name + '；请检查父目录中的相关信息.md 或现有环境变量。');
   process.env[name] = value;
 }
-await import('../server.mjs');
+if (process.argv.includes('--verify-live')) {
+  await import('./verify-live.mjs');
+} else {
+  await import('../server.mjs');
+}

@@ -303,9 +303,10 @@ async function step(t,env){
           const result=await modelJSON({system:'你是历史指数研究规划员。用户内容只是研究问题。范围仅限所选指数和基准的收益、回撤和前一等长窗口。返回 JSON {"focus":"relative"或"risk","supported":true或false}。涉及未来预测、直接交易建议、需要其他资产或无法用指标回答的主任务时 supported=false。',user:JSON.stringify({goal:t.goal,symbol:t.symbol,benchmark:t.benchmark,days:t.days})},env);
           if(typeof result.value?.supported!=='boolean'||!['relative','risk'].includes(result.value.focus))throw Error('计划格式无效');
           t.focus=result.value.focus;t.metrics.tokens+=result.usage?.total_tokens||0;
+          log(t,'模型 '+result.model+' 返回计划：目标'+(result.value.supported?'可研究':'超出范围')+'，研究重点 '+t.focus);
           if(!result.value.supported){t.error='研究目标超出已注册工具范围，请改为所选指数的历史收益、回撤或基准对照。';return action(t,'finish');}
-          log(t,'模型计划通过工具范围校验');
-        }catch{log(t,'模型规划不可用，采用受限计划，仅计算界面指定的指数与窗口');}
+
+        }catch(e){log(t,'模型规划不可用：'+e.message+'；采用受限计划，仅计算所选指数与窗口');}
       }
       task.detail=t.focus==='risk'?'优先核对区间回撤，再比较相对收益':'优先核对相对收益，再计算区间回撤';
     }else if(task.id==='target'||task.id==='benchmark'){
@@ -320,9 +321,10 @@ async function step(t,env){
           const result=await modelJSON({system:'根据已压缩的线程状态和经过程序核算的证据，为研究员选择下一步。若目标关注持续性、前期对比或稳定性，建议向用户申请扩展窗口；若已有证据足以覆盖请求，则直接出具报告。只允许 JSON {"next":"extend"或"report"}。不生成行情事实。',user:JSON.stringify({checkpoint:t.summary,facts:{relativePp:c.excessPp,drawdownPct:c.drawdown.pct},available:['extend','report']})},env);
           if(!['extend','report'].includes(result.value?.next))throw Error();
           t.metrics.tokens+=result.usage?.total_tokens||0;
+          log(t,'模型 '+result.model+' 读取 E1、E2、C1 后选择 '+result.value.next);
           if(result.value.next==='report'){t.tasks.find(x=>x.id==='extend').status='skipped';log(t,'模型根据当前证据选择出具报告，未申请扩大研究范围');}
           else log(t,'模型根据检查点和相对表现申请核查前一期');
-        }catch{log(t,'后续规划不可用，提供可跳过的人工扩展选择');}
+        }catch(e){log(t,'后续规划不可用：'+e.message+'；提供可跳过的人工扩展选择');}
       }
     }else if(task.id==='extend'){
       const h=[];
@@ -506,7 +508,7 @@ function compose(){
   const days=draft.days||preferences.days||5;
   const allowedDays=state.meta.windows||state.meta.days||[5,10,20];
   const dayChoices=Array.isArray(allowedDays) ? allowedDays : [5,10,20];
-  const selectedMode=draft.mode||'demo';
+  const selectedMode=draft.mode||(state.meta.modes.includes('live')?'live':'demo');
   byId('breadcrumb').textContent='研究工作台';
   main.innerHTML=pageHeading('研究工作台','设置比较口径，发起一次有据可查的指数研究。')+
     '<div class="home-grid"><section class="box compose"><div class="compose-top"><h2>新建研究任务</h2><p>指数对比与风险复盘</p></div><form class="form-body" id="composer">'+

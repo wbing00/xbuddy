@@ -77,7 +77,7 @@ function compose(){
   const days=draft.days||preferences.days||5;
   const allowedDays=state.meta.windows||state.meta.days||[5,10,20];
   const dayChoices=Array.isArray(allowedDays) ? allowedDays : [5,10,20];
-  const selectedMode=draft.mode||'demo';
+  const selectedMode=draft.mode||(state.meta.modes.includes('live')?'live':'demo');
   byId('breadcrumb').textContent='研究工作台';
   main.innerHTML=pageHeading('研究工作台','设置比较口径，发起一次有据可查的指数研究。')+
     '<div class="home-grid"><section class="box compose"><div class="compose-top"><h2>新建研究任务</h2><p>指数对比与风险复盘</p></div><form class="form-body" id="composer">'+

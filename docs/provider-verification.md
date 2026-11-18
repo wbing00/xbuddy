@@ -4,8 +4,8 @@
 
 | 服务 | 本次实现及依据 | 本机结果 |
 | --- | --- | --- |
-| 扶摇 | 查询 A 股交易日历及指定指数的历史日线，读取 `data.item[].date_ms` 与 `close_price`。每次工具执行最多产生两次 HTTP 请求。[指数文档](https://fuyao.aicubes.cn/docs/api-reference/a-share-index/) · [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/) | 在内存中装入用户提供的密钥后调用日历。沙箱域名解析失败，未得到服务器响应，账号权限待验证。 |
-| DeepSeek | 使用官方聊天接口及 JSON 输出，默认 `deepseek-flash`，可通过 `DEEPSEEK_MODEL` 覆盖。模型返回原始 token 使用量供 Harness 记录。[官方模型与调用示例](https://api-docs.deepseek.com/) | 在内存中装入密钥后发送极小的 JSON 探针，本机域名解析失败。尚未验证账户余额、模型可用性或线上费用。 |
+| 扶摇 | 查询 A 股交易日历及指定指数的历史日线，读取 `data.item[].date_ms` 与 `close_price`。每次工具执行最多产生两次 HTTP 请求。[指数文档](https://fuyao.aicubes.cn/docs/api-reference/a-share-index/) · [交易日历](https://fuyao.aicubes.cn/docs/api-reference/calendar/) | 候选人在联网 Mac 运行实数线程，取得截至 2026-11-18 的上证综指、沪深300收盘序列，生成 C1。 |
+| DeepSeek | 使用官方聊天接口及 JSON 输出，默认 `deepseek-flash`，可通过 `DEEPSEEK_MODEL` 覆盖。模型返回原始 token 使用量供 Harness 记录。[官方模型与调用示例](https://api-docs.deepseek.com/) | 同一线程中 deepseek-flash 首先返回 relative，读取 C1 的指标后选择 report。线程最终 complete。 |
 | iFinD | 官方提供金融查询 MCP 和 Skill 接入说明。[官方说明](https://mcp.51ifind.com/) | 已核对公开安装指南，运行环境解析官方域名失败，认证和工具列表均未验证。此次版本不调用 iFinD，报告不生成新闻、资金或公告归因。 |
 
 ## 口径与证据
@@ -20,4 +20,4 @@
 
 运行 `node --test test/providers.test.mjs`。测试用构造交易日与价格验证手算的 10 个百分点收益差、缺值和冲突、日期错位，以及 HTTP 200 中携带的业务权限错误。该测试不会消耗线上额度，也不会保存任何真实行情。
 
-在具备外网 DNS 且配置真实服务端密钥的环境打开实数模式，分别检查计划与行情的来源记录。在两次真正的服务端查询成功以前，不应将这些账号标记为已接通。若只需要在原候选人目录启动，使用 `node scripts/start-private.mjs` 从上一级私有说明读入密钥，不输出其值，也不生成凭据副本。发布环境应配置平台的服务器密钥管理功能。
+在具备外网 DNS 且配置真实服务端密钥的环境打开实数模式，分别检查计划与行情的来源记录。运行 `npm run verify:live` 复核同一研究流程。2026-11-18 的 Mac 验证经过直接出报告分支，扩展审批分支与远程托管仍需单独验收。若只需要在原候选人目录启动，使用 `node scripts/start-private.mjs` 从上一级私有说明读入密钥，不输出其值，也不生成凭据副本。发布环境应配置平台的服务器密钥管理功能。
