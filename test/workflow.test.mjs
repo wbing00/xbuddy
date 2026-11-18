@@ -2,13 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {api} from '../lib/api.mjs';
 const payload={goal:'比较白酒概念的表现，核查前一期是否延续',mode:'demo',symbol:'886042.TI',benchmark:'000300.SH',days:20,remember:true};
-function client(){
+function client(options={allowFixtures:true}){
   const rows=new Map(),env={};let tag=0;
   const store={async get(k){return structuredClone(rows.get(k));},async list(p){return [...rows].filter(([k])=>k.startsWith(p)).map(([,v])=>v.value);},async put(k,value,expected){
     if(expected!==undefined&&(rows.get(k)?.tag??null)!==expected)return null;
     rows.set(k,{value:structuredClone(value),tag:String(++tag)});return String(tag);}};
   async function call(path,body){
-    const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store);
+    const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store,options);
     return [r.status,await r.json()];
   }
   return {call,env,store};
@@ -76,4 +76,13 @@ test('live follow-ups use thread evidence and retain context; invalid citations 
   const [,saved]=await call(path);
   assert.equal(saved.followups.length,1);
   assert.equal(saved.metrics.calls,2);
+});
+
+test('production API only offers real data and rejects explicit fixture requests',async()=>{
+  const {call}=client({});
+  assert.deepEqual((await call('meta'))[1].modes,['live']);
+  assert.equal((await call('threads',payload))[0],400);
+  const [status,thread]=await call('threads',{...payload,mode:'live'});
+  assert.equal(status,201);
+  assert.equal(thread.mode,'live');
 });

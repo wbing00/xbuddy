@@ -13,7 +13,7 @@ const offlineStore={
 };
 async function offlineRequest(path,opts){
   if(opts.body && JSON.parse(opts.body).mode==='live')return new Response('{"error":"离线演练仅支持构造数据"}',{status:400});
-  const response=await api(new Request('https://offline.invalid'+path,opts),{},offlineStore);
+  const response=await api(new Request('https://offline.invalid'+path,opts),{},offlineStore,{allowFixtures:true});
   if(path==='/api/meta'){
     const meta=await response.json();meta.modes=['demo'];return Response.json(meta);
   }
