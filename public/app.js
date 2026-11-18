@@ -3,7 +3,7 @@
 const byId = (id) => document.getElementById(id);
 const main = byId('main');
 const labels = { clarification:'等待澄清', running: '执行中', approval: '等待审批', paused: '已暂停', failed: '执行失败', partial: '阶段性完成', complete: '已完成', pending: '待执行', completed: '已完成', done: '已完成', waiting: '等待中', skipped: '已跳过', stopped: '已停止', active: '执行中', queued: '待执行', blocked:'待处理' };
-const state = {meta:null, threads:[], thread:null, tab:'tasks', auto:false, timer:0, epoch:0, busy:false, stepping:false, pendingStop:false, replies:new Map(), fieldDraft:null, toastTimer:0};
+const state = {meta:null, threads:[], thread:null, tab:'tasks', auto:false, timer:0, epoch:0, busy:false, stepping:false, pendingStop:false, chatDrafts:new Map(), fieldDraft:null, toastTimer:0};
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
@@ -108,9 +108,10 @@ function evidenceSection(t){
     return '<details class="record" data-evidence="'+e(ev.id)+'"><summary><span class="mono">'+e(ev.id)+'</span> · '+e(ev.label)+'</summary>'+kv('来源',ev.source)+(ev.raw?.requestId?kv('请求编号',ev.raw.requestId):'')+kv('数据时点',ev.asOf)+kv('单位',ev.unit)+kv('口径',ev.method)+(url?'<a href="'+e(url)+'" target="_blank" rel="noopener noreferrer">打开来源 ↗</a>':'')+'<p>原始字段或计算输入</p><pre class="raw">'+e(JSON.stringify(ev.raw,null,2))+'</pre></details>';
   }).join(''):'<p class="empty">成功取数后，这里会保存来源、时点、单位和原始字段。</p>');
 }
+function reportEvidence(t){return t.reportEvidenceCount===undefined?t.evidence:t.evidence.slice(0,t.reportEvidenceCount);}
 function exportReport(t){
   const r=t.report;if(!r)return;
-  const lines=['# '+r.title,'','模式：在线查询','',t.goal,'','## 事实',...r.facts.map(f=>'- '+f.text+' '+(f.refs||[]).map(id=>'['+id+']').join(' ')),'','## 解读',...r.interpretation.map(v=>'- '+v),'','## 待验证',...r.unknowns.map(v=>'- '+v),'','## 证据索引',...t.evidence.flatMap(v=>['- '+v.id+' '+v.label+'｜'+v.source+'｜'+v.asOf+'｜'+v.unit+'｜'+v.method,...(safeUrl(v.url)?['  '+safeUrl(v.url)]:[])])];
+  const lines=['# '+r.title,'','模式：在线查询','',t.goal,'','## 事实',...r.facts.map(f=>'- '+f.text+' '+(f.refs||[]).map(id=>'['+id+']').join(' ')),'','## 解读',...r.interpretation.map(v=>'- '+v),'','## 待验证',...r.unknowns.map(v=>'- '+v),'','## 证据索引',...reportEvidence(t).flatMap(v=>['- '+v.id+' '+v.label+'｜'+v.source+'｜'+v.asOf+'｜'+v.unit+'｜'+v.method,...(safeUrl(v.url)?['  '+safeUrl(v.url)]:[])])];
   const objectUrl=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=objectUrl;a.download='研究简报-'+t.id+'.md';a.click();setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
 }
 function reportSection(t){
@@ -120,7 +121,7 @@ function reportSection(t){
   return '<div class="section-head"><h2>'+e(r.title)+'</h2><button class="secondary" id="download">下载简报 ↓</button></div>'+chartMarkup(t)+block('已核实事实',r.facts.map(f=>e(f.text)+' '+(f.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')))+block('研究解读',r.interpretation.map(e))+block('仍待验证',r.unknowns.map(e))+((t.previousReports||[]).length?'<details><summary>此前研究简报</summary>'+t.previousReports.map(r=>'<h3>'+e(r.title)+'</h3>'+block('事实',r.facts.map(f=>e(f.text)))).join('')+'</details>':'')+followupMarkup(t);
 }
 function chartMarkup(t){
-  const comparison=t.evidence.findLast(item=>item.tool==='compare'||item.id==='C1');
+  const comparison=reportEvidence(t).findLast(item=>item.tool==='compare'||item.id==='C1');
   const c=comparison?.raw;if(!c?.series?.length)return '';
   const format=n=>Number.isFinite(n)?(n>0?'+':'')+n.toFixed(2):'—';
   return '<figure class="chart"><figcaption><strong>区间累计收益</strong><small>'+e(c.start)+' — '+e(c.end)+'</small></figcaption>'+
@@ -130,7 +131,7 @@ function chartMarkup(t){
 }
 function paintChart(t){
   const canvas=byId('returns-chart'); if(!canvas)return;
-  const series=t.evidence.findLast(item=>item.tool==='compare'||item.id==='C1')?.raw.series||[];
+  const series=reportEvidence(t).findLast(item=>item.tool==='compare'||item.id==='C1')?.raw.series||[];
   const ctx=canvas.getContext('2d'); if(series.length<2||!ctx)return;
   const values=series.flatMap(row=>[row.targetPct,row.benchmarkPct]);if(!values.every(Number.isFinite))return;
   const w=Math.max(220,canvas.clientWidth),h=150,scale=Math.min(window.devicePixelRatio||1,2);
@@ -151,20 +152,32 @@ function paintChart(t){
   ctx.fillStyle='#596c62';ctx.fillText(String(series[0].date).slice(5),left,h-7);ctx.textAlign='right';ctx.fillText(String(series.at(-1).date).slice(5),right,h-7);
 }
 function followupMarkup(t){
-  const reply=t.followups?.at(-1)||state.replies.get(t.id);
-  return '<form class="followup" id="followup"><label class="field"><span>追问这份简报</span><input type="text" id="question" required maxlength="300" placeholder="例如，本次复盘使用了哪些日期？"></label><button class="secondary" type="submit">核查证据</button></form>'+
-    (reply?'<div class="message" role="status"><strong>'+e(reply.question)+'</strong><p>'+e(reply.answer)+'</p>'+(reply.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')+'</div>':'');
+  const messages=t.chat??(t.followups||[]).flatMap(x=>[{role:'user',text:x.question},{role:'assistant',text:x.answer,refs:x.refs}]);
+  const rows=messages.map(m=>'<div class="chat-message '+(m.role==='user'?'user':'assistant')+'"><strong>'+ (m.role==='user'?'你':'研究助手')+'</strong><p>'+e(m.text)+'</p>'+(m.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')+'</div>').join('');
+  const run=t.chatRun;
+  let progress='';
+  if(run?.status==='approval'){
+    progress='<div class="message warn"><strong>需要补查资料</strong><p>'+e(run.pending.detail)+'</p><p>'+e(run.pending.id)+' · '+e(JSON.stringify(run.pending.args))+'</p>'+toolbutton('approve','允许补查')+' '+toolbutton('skip','只用现有资料回答')+'</div>';
+  }else if(run){
+    progress='<p role="status">'+e(run.pending?'正在补查：'+run.pending.detail:'正在整理回复…')+'</p>'+(state.auto?'':toolbutton('continue','继续回复'));
+  }
+  const disabled=run?' disabled':'';
+  return '<section class="brief-chat" aria-label="简报对话"><h3>讨论这份简报</h3><div class="chat-history" role="log" aria-live="polite">'+rows+'</div>'+progress+
+    '<form class="chat-composer" id="followup"><label class="field"><span>你的消息</span><textarea rows="2" id="question" required maxlength="500" placeholder="哪里没看懂？也可以接着问。"'+disabled+'>'+e(state.chatDrafts.get(t.id)||'')+'</textarea></label><button class="primary" type="submit"'+disabled+'>发送</button></form></section>';
 }
+document.addEventListener('input',ev=>{
+  if(ev.target.id==='question'&&state.thread)state.chatDrafts.set(state.thread.id,ev.target.value);
+});
 document.addEventListener('submit',async ev=>{
   if(ev.target.id==='clarification'){
     ev.preventDefault();await action('clarify',{question:byId('clarify-answer').value});return;
   }
-  if(ev.target.id!=='followup')return;ev.preventDefault();const question=byId('question').value.trim(),t=state.thread,epoch=state.epoch;if(!question||!t)return;
-  if(t.version===2){await action('followup',{question});return;}
-  const btn=ev.target.querySelector('button');btn.disabled=true;btn.textContent='核查中…';
-  try{const reply=await request('threads/'+encodeURIComponent(t.id)+'/followup',{question});state.replies.set(t.id,{...reply,question});if(state.epoch===epoch){await syncThread(t.id,epoch);byId('question')?.focus();}}
-  catch(err){showNotice(err.message);btn.disabled=false;btn.textContent='核查证据';}
+  if(ev.target.id!=='followup')return;
+  ev.preventDefault();
+  const question=byId('question').value.trim();
+  if(question&&!state.busy&&!state.thread?.chatRun)await action('chat',{question});
 });
+function activity(t){return t?.chatRun?.status||t?.status;}
 let resizeTimer;
 window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(state.thread)paintChart(state.thread);},100);});
 function eventSection(t){return '<div class="section-head"><h2>运行记录</h2></div>'+([...(t.events||[])].reverse().map(ev=>'<div class="event"><time>'+e(formatDate(ev.at,true))+'</time><div>'+e(ev.text)+'</div></div>').join('')||'<div class="empty">暂无运行记录。</div>');}
@@ -192,21 +205,22 @@ function detail(){
 }
 function schedule(){
   clearTimeout(state.timer);
-  if(state.auto&&state.thread?.status==='running')state.timer=setTimeout(step,500);
+  if(state.auto&&activity(state.thread)==='running')state.timer=setTimeout(step,500);
 }
 async function syncThread(id,epoch){
   const t=await request('threads/'+encodeURIComponent(id));if(epoch!==state.epoch)return;saveThread(t);detail();
 }
 async function step(){
   const t=state.thread;
-  if(!state.auto||!t||t.status!=='running'||state.stepping)return;
+  if(!state.auto||!t||activity(t)!=='running'||state.stepping)return;
   const epoch=state.epoch;state.stepping=true;
   try{
     const next=await request('threads/'+encodeURIComponent(t.id)+'/step',{revision:t.revision});
     if(epoch!==state.epoch)return;
-    if(next.status!=='running')stopClock();
+    if(activity(next)!=='running')stopClock();
     if(next.report&&!t.report)state.tab='report';
     saveThread(next);detail();
+    if(t.chatRun&&!next.chatRun&&state.tab==='report')byId('question')?.focus({preventScroll:true});
   }catch(err){
     if(epoch!==state.epoch)return;
     stopClock(); showNotice(err.message);
@@ -226,7 +240,8 @@ async function action(name,input={}){
   try{
     const next=await request('threads/'+encodeURIComponent(t.id)+'/'+encodeURIComponent(name),{...input,revision:t.revision});
     if(epoch!==state.epoch)return;
-    state.auto=next.status==='running'&&name!=='stop';if(next.report&&!t.report)state.tab='report';if(!next.report&&t.report)state.tab='tasks';saveThread(next);
+    if(name==='chat')state.chatDrafts.delete(t.id);
+    state.auto=activity(next)==='running'&&name!=='stop';if(next.report&&!t.report)state.tab='report';if(!next.report&&t.report)state.tab='tasks';saveThread(next);
   }catch(err){if(epoch===state.epoch){showNotice(err.message);try{await syncThread(t.id,epoch);}catch{}}}
   finally{state.busy=false;if(epoch===state.epoch){detail();schedule();}}
 }

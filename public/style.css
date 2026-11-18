@@ -11,3 +11,13 @@
 .chart{padding:15px;border:1px solid var(--line);border-radius:6px;background:#f8faf4;margin:15px 0}.chart figcaption,.chart-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}.chart figcaption small,.chart-foot span{font:10px/1.5 var(--mono);color:var(--muted)}.chart figcaption strong{font-size:14px}.chart-legend{display:flex;flex-wrap:wrap;gap:13px;font-size:11px;margin:9px 0 3px}.chart-legend span{display:flex;align-items:center;gap:5px}.chart-legend i{width:13px;height:3px;background:#226354}.chart-legend span+span i{background:#a2854e}.chart-legend b{font:11px var(--mono)}.chart canvas{display:block;width:100%;height:150px}.chart-foot{margin-top:5px}.followup{padding-top:14px;border-top:1px solid var(--line);display:flex;align-items:flex-end;gap:8px}.followup .field{flex:1;margin:0}.followup button{white-space:nowrap}
 .tools-list{border-top:1px solid var(--line);font-size:12px;color:var(--muted);padding-top:9px}.tools-list summary{color:var(--green)}.tools-list .kv{font-size:11px}.tools-list>.kv:nth-child(2){margin-top:6px}
 @media(max-width:700px){.rail{visibility:hidden}.rail.open{visibility:visible}}
+
+.brief-chat{border-top:1px solid var(--line);margin-top:24px;padding-top:18px}
+.chat-history{display:grid;gap:12px;margin:14px 0}
+.chat-message{width:fit-content;max-width:90%;padding:10px 14px;border-radius:10px;background:#f1f4ef;overflow-wrap:anywhere}
+.chat-message.user{justify-self:end;background:#e3eee8}
+.chat-message strong{color:#31584a;font-size:12px}
+.chat-message p{white-space:pre-wrap;line-height:1.6;margin:4px 0}
+.chat-composer{display:flex;gap:10px;align-items:flex-end}
+.chat-composer .field{flex:1;min-width:0;margin:0}
+.chat-composer textarea{width:100%}
