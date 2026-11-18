@@ -15,11 +15,3 @@ const worker=(await read('worker.mjs')).replace(/^import .*?;$/gm,'').replace('c
 await mkdir(new URL('dist/server/',root),{recursive:true});await mkdir(new URL('dist/.openai/',root),{recursive:true});
 await writeFile(new URL('dist/server/index.js',root),parts.join('\n')+'\n'+worker);
 await copyFile(new URL('.openai/hosting.json',root),new URL('dist/.openai/hosting.json',root));
-const transport=await read('scripts/offline-transport.js');
-const ui=(await read('public/app.js')).replace("await fetch('/api/'+path,options)","await offlineRequest('/api/'+path,options)");
-const offlineJS='(()=>{'+parts.join('\n')+'\n'+transport+'\n;(()=>{'+ui+'})();})();';
-const html=(await read('public/index.html'))
-  .replace('<link rel="stylesheet" href="/style.css">',()=>'<style>'+assets['/style.css'][1]+'</style>')
-  .replace('  <script src="/app.js" defer></script>','')
-  .replace('</body>',()=>'<script>'+offlineJS.replace(/<\/script/gi,'<\\/script')+'</script></body>');
-await writeFile(new URL('dist/离线演练.html',root),html);

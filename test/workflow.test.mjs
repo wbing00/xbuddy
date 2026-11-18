@@ -1,32 +1,50 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {api} from '../lib/api.mjs';
-const payload={goal:'比较白酒概念的表现，核查前一期是否延续',mode:'demo',symbol:'886042.TI',benchmark:'000300.SH',days:20,remember:true};
-function client(options={allowFixtures:true}){
-  const rows=new Map(),env={};let tag=0;
+const payload={goal:'比较白酒概念的表现，核查前一期是否延续',mode:'live',symbol:'886042.TI',benchmark:'000300.SH',days:20,remember:true};
+function client(env={}){
+  const rows=new Map();let tag=0;
   const store={async get(k){return structuredClone(rows.get(k));},async list(p){return [...rows].filter(([k])=>k.startsWith(p)).map(([,v])=>v.value);},async put(k,value,expected){
     if(expected!==undefined&&(rows.get(k)?.tag??null)!==expected)return null;
     rows.set(k,{value:structuredClone(value),tag:String(++tag)});return String(tag);}};
   async function call(path,body){
-    const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store,options);
+    const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store);
     return [r.status,await r.json()];
   }
   return {call,env,store};
 }
+// Network boundary only: the tests run the same calendar and price adapters as the product.
+function marketEnv(){
+  return {FUYAO_API_KEY:'test-only',async fetch(input){
+    const url=new URL(input),params=url.searchParams;
+    const calendar=url.pathname.endsWith('/trading-days');
+    const dateParam=name=>Date.parse(params.get(name).replace(/^(....)(..)(..)$/,'$1-$2-$3')+'T00:00:00+08:00');
+    const start=calendar?dateParam('start_date'):Number(params.get('start'));
+    const end=calendar?dateParam('end_date'):Number(params.get('end'));
+    const item=[];
+    for(let ms=start;ms<=end;ms+=86400000){
+      const d=new Date(ms+8*3600000);
+      if([0,6].includes(d.getUTCDay()))continue;
+      const date=d.toISOString().slice(0,10).replaceAll('-','');
+      item.push(calendar?{date}:{date_ms:ms,close_price:100+ms/8640000000});
+    }
+    return Response.json({code:0,data:{item},request_id:'test-request'});
+  }};
+}
 test('reviewer flow checkpoints, resumes, asks approval, cites reproducible numbers and recalls preferences',async()=>{
-  const {call}=client();let [s,t]=await call('threads',payload);assert.equal(s,201);const path='threads/'+t.id;
+  const {call}=client(marketEnv());let [s,t]=await call('threads',payload);assert.equal(s,201);const path='threads/'+t.id;
   async function go(a){[s,t]=await call(path+'/'+a,{revision:t.revision});assert.equal(s,200);}
   await go('step');await go('step');const first=t.evidence[0];await go('stop');
   assert.equal((await call(path))[1].status,'paused');await go('resume');
   assert.deepEqual(t.evidence[0],first);await go('step');await go('step');await go('step');
-  assert.equal(t.status,'approval');assert.equal(t.evidence.length,3);assert.equal(t.metrics.calls,2);
+  assert.equal(t.status,'approval');assert.equal(t.evidence.length,3);assert.equal(t.metrics.calls,4);
   await go('approve');await go('step');await go('step');assert.equal(t.status,'complete');
-  assert.equal(t.evidence.length,6);assert.equal(t.metrics.calls,4);
+  assert.equal(t.evidence.length,6);assert.equal(t.metrics.calls,6);
   const c=t.evidence.find(e=>e.id==='C1').raw;assert.equal(c.series.length,21);
   assert.equal(t.evidence.find(e=>e.id==='C2').raw.end,c.start);
   for(const f of t.report.facts)for(const id of f.refs)assert.ok(t.evidence.some(e=>e.id===id));
   assert.deepEqual((await call('meta'))[1].preferences,{benchmark:payload.benchmark,days:20});
-  assert.match((await call(path+'/followup',{question:'有多少个交易日？'}))[1].answer,/21 个收盘/);
+  assert.equal(first.raw.requestId,'test-request');
 });
 test('a failed live query never substitutes synthetic data; retry limit and partial report are enforced',async()=>{
   const {call}=client();let t=(await call('threads',{...payload,mode:'live'}))[1];const path='threads/'+t.id;
@@ -47,9 +65,9 @@ test('trade directive terminates with zero external calls; invalid choices rejec
   assert.equal((await call('threads',{...payload,symbol:payload.benchmark}))[0],400);
 });
 test('skipping optional expansion preserves the original research scope and data',async()=>{
-  const {call}=client();let t=(await call('threads',payload))[1],url='threads/'+t.id;
+  const {call}=client(marketEnv());let t=(await call('threads',payload))[1],url='threads/'+t.id;
   for(const act of ['step','step','step','step','step','skip','step'])t=(await call(url+'/'+act,{revision:t.revision}))[1];
-  assert.equal(t.status,'complete');assert.equal(t.metrics.calls,2);assert.equal(t.report.facts.length,2);
+  assert.equal(t.status,'complete');assert.equal(t.metrics.calls,4);assert.equal(t.report.facts.length,2);
 });
 
 test('live follow-ups use thread evidence and retain context; invalid citations fail',async()=>{
@@ -81,8 +99,17 @@ test('live follow-ups use thread evidence and retain context; invalid citations 
 test('production API only offers real data and rejects explicit fixture requests',async()=>{
   const {call}=client({});
   assert.deepEqual((await call('meta'))[1].modes,['live']);
-  assert.equal((await call('threads',payload))[0],400);
+  assert.equal((await call('threads',{...payload,mode:'demo'}))[0],400);
   const [status,thread]=await call('threads',{...payload,mode:'live'});
   assert.equal(status,201);
   assert.equal(thread.mode,'live');
+});
+
+test('archived sample threads are excluded from the workspace and cannot be resumed',async()=>{
+  const {call,store}=client();
+  const id=crypto.randomUUID();
+  await store.put('thread/'+id,{id,mode:'demo',status:'running'});
+  assert.deepEqual((await call('threads'))[1].threads,[]);
+  assert.equal((await call('threads/'+id))[0],410);
+  assert.equal((await call('threads/'+id+'/step',{}))[0],410);
 });
