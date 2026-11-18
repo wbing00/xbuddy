@@ -3,7 +3,7 @@ import {mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 const root=new URL('../',import.meta.url);
 const read=p=>readFile(new URL(p,root),'utf8');
 const parts=[];
-for(const [name,api] of [['providers',['getIndexHistory','compareIndices','modelJSON']],['harness',['action','benchmarks','createThread','problem','registry','step','subjects']],['api',['api']]]){
+for(const [name,api] of [['providers',['getIndexHistory','compareIndices','modelJSON','fuyao']],['harness',['action','benchmarks','createThread','problem','registry','step','subjects']],['research-tools',['researchTools','queryResearchTool']],['ifind',['hasIfind','requestIfind']],['agent',['newResearch','advanceResearch','researchAction']],['api',['api']]]){
   const source=(await read('lib/'+name+'.mjs')).replace(/^import .*?;$/gm,'').replace(/^export /gm,'');
   parts.push('const {'+api.join(',')+'} = (() => {\n'+source+'\nreturn {'+api.join(',')+'};\n})();');
 }

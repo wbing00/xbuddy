@@ -2,7 +2,7 @@
 
 const byId = (id) => document.getElementById(id);
 const main = byId('main');
-const labels = { running: '执行中', approval: '等待审批', paused: '已暂停', failed: '执行失败', partial: '阶段性完成', complete: '已完成', pending: '待执行', completed: '已完成', done: '已完成', waiting: '等待中', skipped: '已跳过', stopped: '已停止', active: '执行中', queued: '待执行', blocked:'待处理' };
+const labels = { clarification:'等待澄清', running: '执行中', approval: '等待审批', paused: '已暂停', failed: '执行失败', partial: '阶段性完成', complete: '已完成', pending: '待执行', completed: '已完成', done: '已完成', waiting: '等待中', skipped: '已跳过', stopped: '已停止', active: '执行中', queued: '待执行', blocked:'待处理' };
 const state = {meta:null, threads:[], thread:null, tab:'tasks', auto:false, timer:0, epoch:0, busy:false, stepping:false, pendingStop:false, replies:new Map(), fieldDraft:null, toastTimer:0};
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
@@ -57,49 +57,27 @@ function saveThread(t){
 function menuClick(id){const next=id ? '#thread/'+encodeURIComponent(id) : '#new'; if(location.hash===next){route();}else{location.hash=next;}}
 function stopClock(){state.auto=false;clearTimeout(state.timer);}
 function options(items,selected){return items.map(o=>'<option value="'+e(o.symbol)+'" '+(o.symbol===selected?'selected':'')+'>'+e(o.name)+' · '+e(o.symbol)+'</option>').join('');}
-function templates(){
-  const subj=byId('symbol')?.value ? byId('symbol').selectedOptions[0].textContent.split(' · ')[0] : (byId('benchmark')?.value==='000001.SH'?'深证成指':'上证综指');
-  const bench=byId('benchmark')?.selectedOptions[0]?.textContent.split(' · ')[0] || '基准指数';
-  const days=byId('days')?.value || '5';
-  return [
-    {name:'指数相对表现',desc:'同区间比较指数收益与基准差异',goal:'复盘'+subj+'最近 '+days+' 个交易日相对'+bench+'的表现。列出区间收益、相对收益及计算依据。'},
-    {name:'回撤与风险',desc:'检查区间内的下行波动',goal:'比较'+subj+'与'+bench+'最近 '+days+' 个交易日的收益和风险。核查区间内最大回撤，说明样本局限。'},
-    {name:'晨会复盘简报',desc:'以事实、解读和待核查项交付',goal:'整理'+subj+'最近 '+days+' 个交易日的晨会简报，以'+bench+'为基准。分别列出事实、解释和待验证问题，并附原始依据。'}
-  ];
-}
-function setTemplate(index){const t=templates()[index];if(!t)return;byId('goal').value=t.goal;byId('goal').dataset.template=String(index);byId('goal').focus();}
+const examples=[
+  '分析黄金最近的表现，先帮我明确适合的报价口径。',
+  '比较上证综指和沪深300最近五个交易日的表现，哪个回撤更大？',
+  '贵州茅台（600519.SH）最新行情和主力资金快照分别说明什么？'
+];
+function setTemplate(index){if(examples[index]){byId('goal').value=examples[index];byId('goal').focus();}}
 function compose(){
-  const {subjects=[],benchmarks=[],preferences={}}=state.meta;
-  const draft=state.fieldDraft||{};
-  const symbol=draft.symbol||'';
-  const benchmark=draft.benchmark||preferences.benchmark||benchmarks.find(o=>o.symbol!==symbol)?.symbol;
-  const days=draft.days||preferences.days||5;
-  const allowedDays=state.meta.windows||state.meta.days||[5,10,20];
-  const dayChoices=Array.isArray(allowedDays) ? allowedDays : [5,10,20];
+  const draft=state.fieldDraft||{},prefs=state.meta.preferences;
   byId('breadcrumb').textContent='研究工作台';
-  main.innerHTML=pageHeading('研究工作台','设置比较口径，发起一次有据可查的指数研究。')+
-    '<div class="home-grid"><section class="box compose"><div class="compose-top"><h2>新建研究任务</h2><p>指数对比与风险复盘</p></div><form class="form-body" id="composer">'+
-    '<label class="field"><span>研究目标</span><textarea id="goal" maxlength="500" required rows="3" placeholder="描述你希望回答的问题">'+e(draft.goal||'')+'</textarea></label>'+
-    '<div class="fields"><label class="field"><span>研究指数</span><select id="symbol"><option value="">从研究目标识别</option>'+options(subjects,symbol)+'</select></label>'+
-    '<label class="field"><span>比较基准</span><select required id="benchmark">'+options(benchmarks,benchmark)+'</select></label>'+
-    '<label class="field"><span>观察窗口</span><select id="days">'+dayChoices.map(d=>'<option value="'+e(d)+'" '+(Number(d)===Number(days)?'selected':'')+'>'+e(d)+' 个交易日</option>').join('')+'</select></label></div>'+
-    '<p class="help">行情来自扶摇交易日历与指数日线。</p><label class="remember"><input type="checkbox" id="remember" '+(draft.remember?'checked':'')+'> 记住基准和观察窗口</label><div id="form-error" role="alert"></div><div class="btn-row end"><button class="primary" id="run" type="submit">开始研究 <span aria-hidden="true">→</span></button></div></form></section>'+
-    '<aside class="side-stack"><section class="box box-inner templates"><div class="section-head"><h3>研究模板</h3></div>'+[
-      ['指数相对表现','同区间比较指数收益与基准差异'],
-      ['回撤与风险','检查区间内的下行波动'],
-      ['晨会复盘简报','以事实、解读和待核查项交付']
-    ].map(([name,desc],i)=>'<button class="template" data-template="'+i+'"><strong>'+e(name)+' <span aria-hidden="true">↗</span></strong><small>'+e(desc)+'</small></button>').join('')+'</section></aside></div>'+
-    (state.threads.length?'<section class="history"><div class="section-head"><h2>最近研究</h2></div><div class="history-grid">'+state.threads.slice(0,3).map(t=>'<button class="history-card" data-thread="'+e(t.id)+'">'+statusPill(t.status)+'<strong>'+e(t.title||t.goal)+'</strong><span class="muted">'+e(formatDate(t.updatedAt))+' · '+'在线查询'+'</span></button>').join('')+'</div></section>':'');
-  byId('goal').addEventListener('input',()=>delete byId('goal').dataset.template);
-  for(const id of ['symbol','benchmark','days']){
-    byId(id).addEventListener('change',()=>{const ta=byId('goal');if(ta.dataset.template!==undefined)ta.value=templates()[Number(ta.dataset.template)].goal;});
-  }
+  main.innerHTML=pageHeading('投资研究工作台','提出研究问题，查看调查过程与原始证据。')+
+    '<div class="home-grid"><section class="box compose"><form class="form-body" id="composer">'+
+    '<label class="field"><span>你想研究什么？</span><textarea id="goal" maxlength="500" required rows="4" placeholder="输入标的、想了解的问题或时间范围">'+e(draft.goal||'')+'</textarea></label>'+
+    '<details><summary>默认研究偏好</summary><div class="fields"><label class="field">观察窗口<select id="days">'+[5,10,20].map(d=>'<option value="'+d+'" '+(d===(draft.days||prefs.days)?'selected':'')+'>'+d+' 个交易日</option>').join('')+'</select></label><label class="field">比较时的基准<select id="benchmark">'+options(state.meta.benchmarks,draft.benchmark||prefs.benchmark)+'</select></label></div><label class="remember"><input id="remember" type="checkbox">记住偏好</label></details>'+
+    '<div id="form-error" role="alert"></div><div class="btn-row end"><button class="primary" id="run">开始研究 →</button></div></form></section>'+
+    '<aside class="box box-inner"><h3>试试这些问题</h3>'+examples.map((q,i)=>'<button class="template" data-template="'+i+'">'+e(q)+'</button>').join('')+'</aside></div>';
   byId('composer').addEventListener('submit',createThread);
 }
 async function createThread(ev){
   ev.preventDefault();
   if(state.busy)return;
-  const payload={goal:byId('goal').value.trim(),mode:'live',symbol:byId('symbol').value,benchmark:byId('benchmark').value,days:Number(byId('days').value),remember:byId('remember').checked};
+  const payload={goal:byId('goal').value.trim(),mode:'live',benchmark:byId('benchmark').value,days:Number(byId('days').value),remember:byId('remember').checked};
   const error=byId('form-error');
   function fail(message){error.className='message error';error.textContent=message;}
   if(!payload.goal)return fail('请输入研究目标。');
@@ -113,6 +91,7 @@ async function createThread(ev){
 }
 function toolbutton(action,text,kind='secondary'){return '<button type="button" class="'+kind+'" data-action="'+action+'">'+text+'</button>';}
 function actions(t){
+  if(t.status==='clarification')return '<form id="clarification" class="message warn"><label class="field"><strong>需要明确研究口径</strong><span>'+e(t.question)+'</span><input id="clarify-answer" maxlength="500" required></label><button class="primary">继续调查</button></form>';
   if(t.status==='approval')return '<div class="message warn" role="status"><strong>研究范围需要确认</strong><p>'+e(t.approval||'是否允许执行下一项扩展调查？')+'</p><div class="btn-row">'+toolbutton('approve','批准并继续','primary')+toolbutton('skip','跳过扩展调查')+toolbutton('finish','交付阶段简报','quiet')+'</div></div>';
   if(t.status==='failed')return '<div class="message error"><strong>步骤未完成</strong><p>'+e(t.error||'请检查调用记录。')+'</p><div class="btn-row">'+toolbutton('retry','重试失败步骤','primary')+toolbutton('finish','生成阶段性结果')+'</div></div>';
   if(t.status==='paused')return '<div class="message"><strong>已保存检查点</strong><p>恢复后会复用此前已完成的步骤。</p><div class="btn-row">'+toolbutton('resume','恢复研究','primary')+toolbutton('finish','生成阶段性结果')+'</div></div>';
@@ -138,19 +117,20 @@ function reportSection(t){
   if(!t.report)return '<div class="section-head"><h2>研究简报</h2></div><div class="empty">研究完成或阶段性结束后，在这里查看简报。</div>';
   const r=t.report;
   function block(title,items){return '<section class="report-block"><h3>'+title+'</h3>'+(items.length?'<ul>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ul>':'<p class="muted">暂无记录。</p>')+'</section>';}
-  return '<div class="section-head"><h2>'+e(r.title)+'</h2><button class="secondary" id="download">下载简报 ↓</button></div>'+chartMarkup(t)+block('已核实事实',r.facts.map(f=>e(f.text)+' '+(f.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')))+block('研究解读',r.interpretation.map(e))+block('仍待验证',r.unknowns.map(e))+followupMarkup(t);
+  return '<div class="section-head"><h2>'+e(r.title)+'</h2><button class="secondary" id="download">下载简报 ↓</button></div>'+chartMarkup(t)+block('已核实事实',r.facts.map(f=>e(f.text)+' '+(f.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')))+block('研究解读',r.interpretation.map(e))+block('仍待验证',r.unknowns.map(e))+((t.previousReports||[]).length?'<details><summary>此前研究简报</summary>'+t.previousReports.map(r=>'<h3>'+e(r.title)+'</h3>'+block('事实',r.facts.map(f=>e(f.text)))).join('')+'</details>':'')+followupMarkup(t);
 }
 function chartMarkup(t){
-  const c=t.evidence.find(item=>item.id==='C1')?.raw;if(!c?.series?.length)return '';
+  const comparison=t.evidence.findLast(item=>item.tool==='compare'||item.id==='C1');
+  const c=comparison?.raw;if(!c?.series?.length)return '';
   const format=n=>Number.isFinite(n)?(n>0?'+':'')+n.toFixed(2):'—';
   return '<figure class="chart"><figcaption><strong>区间累计收益</strong><small>'+e(c.start)+' — '+e(c.end)+'</small></figcaption>'+
-    '<div class="chart-legend"><span><i></i>'+e(nameOf(t.symbol))+' <b>'+format(c.targetPct)+'%</b></span><span><i></i>'+e(nameOf(t.benchmark))+' <b>'+format(c.benchmarkPct)+'%</b></span></div>'+
+    '<div class="chart-legend"><span><i></i>'+e(t.symbol?nameOf(t.symbol):comparison.label.split(' 对比 ')[0])+' <b>'+format(c.targetPct)+'%</b></span><span><i></i>'+e(t.benchmark?nameOf(t.benchmark):comparison.label.split(' 对比 ')[1])+' <b>'+format(c.benchmarkPct)+'%</b></span></div>'+
     '<canvas id="returns-chart" role="img" aria-label="研究指数与基准相对期初的累计收益折线，原始数据见下方证据 C1"></canvas>'+
-    '<div class="chart-foot"><span>相对期初收盘 · 单位 %</span><button data-ref="C1" class="ref">查看计算依据 C1</button></div></figure>';
+    '<div class="chart-foot"><span>相对期初收盘 · 单位 %</span><button data-ref="'+e(comparison.id)+'" class="ref">查看计算依据 '+e(comparison.id)+'</button></div></figure>';
 }
 function paintChart(t){
   const canvas=byId('returns-chart'); if(!canvas)return;
-  const series=t.evidence.find(item=>item.id==='C1')?.raw.series||[];
+  const series=t.evidence.findLast(item=>item.tool==='compare'||item.id==='C1')?.raw.series||[];
   const ctx=canvas.getContext('2d'); if(series.length<2||!ctx)return;
   const values=series.flatMap(row=>[row.targetPct,row.benchmarkPct]);if(!values.every(Number.isFinite))return;
   const w=Math.max(220,canvas.clientWidth),h=150,scale=Math.min(window.devicePixelRatio||1,2);
@@ -176,7 +156,11 @@ function followupMarkup(t){
     (reply?'<div class="message" role="status"><strong>'+e(reply.question)+'</strong><p>'+e(reply.answer)+'</p>'+(reply.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')+'</div>':'');
 }
 document.addEventListener('submit',async ev=>{
+  if(ev.target.id==='clarification'){
+    ev.preventDefault();await action('clarify',{question:byId('clarify-answer').value});return;
+  }
   if(ev.target.id!=='followup')return;ev.preventDefault();const question=byId('question').value.trim(),t=state.thread,epoch=state.epoch;if(!question||!t)return;
+  if(t.version===2){await action('followup',{question});return;}
   const btn=ev.target.querySelector('button');btn.disabled=true;btn.textContent='核查中…';
   try{const reply=await request('threads/'+encodeURIComponent(t.id)+'/followup',{question});state.replies.set(t.id,{...reply,question});if(state.epoch===epoch){await syncThread(t.id,epoch);byId('question')?.focus();}}
   catch(err){showNotice(err.message);btn.disabled=false;btn.textContent='核查证据';}
@@ -189,6 +173,7 @@ function registryMarkup(t){
   const registry=state.meta.registry;
   if(!registry||!Object.keys(registry).length)return '';
   const permissions={model:'模型调用',read:'只读查询',compute:'本地计算',approval:'需额外批准'};
+  if(t.version===2)return '';
   return '<details class="tools-list"><summary>查看工具与权限</summary>'+t.tasks.filter(task=>registry[task.id]).map(task=>{
     const tool=registry[task.id];return kv(tool.label,permissions[tool.permission]||tool.permission);
   }).join('')+'</details>';
@@ -199,8 +184,8 @@ function detail(){
   byId('breadcrumb').textContent='研究线程';
   const tm=t.metrics||{};
   const views={tasks:renderTasks,evidence:evidenceSection,report:reportSection,events:eventSection};
-  main.innerHTML=pageHeading(t.title||'研究线程')+'<section class="box detail-hero"><div class="row wrap"><span class="label">研究目标</span>'+statusPill(t.status)+'</div><p class="goal">'+e(t.goal)+'</p>'+actions(t)+'</section>'+
-    '<div class="detail-grid"><div class="box box-inner"><nav class="tabs" aria-label="线程视图">'+Object.entries({tasks:'任务',evidence:'证据 '+t.evidence.length,report:'简报',events:'日志'}).map(([key,label])=>'<button data-tab="'+key+'" aria-pressed="'+(key===state.tab)+'">'+e(label)+'</button>').join('')+'</nav><div id="view">'+views[state.tab](t)+'</div></div><aside class="side-stack"><section class="box box-inner"><div class="section-head"><h3>研究口径</h3></div>'+kv('行情工具','扶摇')+kv('研究指数',nameOf(t.symbol))+kv('比较基准',nameOf(t.benchmark))+kv('观察窗口',t.days+' 个交易日')+'</section><section class="box box-inner"><div class="section-head"><h3>执行用量</h3></div>'+kv('调用次数',(tm.calls??0)+' / '+(tm.limit??'—'))+kv('累计耗时',((tm.elapsedMs||0)/1000).toFixed(1)+' s')+kv('模型 Token',tm.tokens??0)+registryMarkup(t)+'</section>'+(t.summary?'<section class="box box-inner"><div class="section-head"><h3>压缩上下文</h3></div><p class="context">'+e(t.summary)+'</p></section>':'')+'</aside></div>';
+  main.innerHTML=pageHeading(t.title||'研究线程')+'<section class="box detail-hero"><div class="row wrap"><span class="label">研究目标</span>'+statusPill(t.status)+'</div><p class="goal">'+e(t.currentGoal||t.goal)+'</p>'+actions(t)+'</section>'+
+    '<div class="detail-grid"><div class="box box-inner"><nav class="tabs" aria-label="线程视图">'+Object.entries({tasks:'任务',evidence:'证据 '+t.evidence.length,report:'简报',events:'日志'}).map(([key,label])=>'<button data-tab="'+key+'" aria-pressed="'+(key===state.tab)+'">'+e(label)+'</button>').join('')+'</nav><div id="view">'+views[state.tab](t)+'</div></div><aside class="side-stack"><section class="box box-inner"><div class="section-head"><h3>研究口径</h3></div>'+(t.version===2?kv('研究时点',t.asOf)+kv('当前问题',t.currentGoal||t.goal):kv('研究指数',nameOf(t.symbol))+kv('比较基准',nameOf(t.benchmark)))+'</section><section class="box box-inner"><div class="section-head"><h3>执行用量</h3></div>'+kv('调用次数',(tm.calls??0)+' / '+(tm.limit??'—'))+kv('累计耗时',((tm.elapsedMs||0)/1000).toFixed(1)+' s')+kv('模型 Token',tm.tokens??0)+registryMarkup(t)+'</section>'+(t.summary?'<section class="box box-inner"><div class="section-head"><h3>压缩上下文</h3></div><p class="context">'+e(t.summary)+'</p></section>':'')+'</aside></div>';
   if(state.tab==='evidence') main.querySelectorAll('[data-evidence]').forEach(d=>{if(open.has(d.dataset.evidence))d.open=true;});
   paintChart(t);
   if(state.busy&&t.status!=='running')main.querySelectorAll('[data-action]').forEach(b=>b.disabled=true);
@@ -232,16 +217,16 @@ async function step(){
     schedule();
   }
 }
-async function action(name){
+async function action(name,input={}){
   const t=state.thread;if(!t||state.busy)return;
   if(name==='stop'&&state.stepping){stopClock();state.pendingStop=true;detail();return;}
   if(name==='continue'){state.auto=true;detail();schedule();return;}
   stopClock();const epoch=++state.epoch;state.busy=true;
   main.querySelectorAll('[data-action]').forEach(el=>el.disabled=true);
   try{
-    const next=await request('threads/'+encodeURIComponent(t.id)+'/'+encodeURIComponent(name),{revision:t.revision});
+    const next=await request('threads/'+encodeURIComponent(t.id)+'/'+encodeURIComponent(name),{...input,revision:t.revision});
     if(epoch!==state.epoch)return;
-    state.auto=next.status==='running'&&name!=='stop';if(next.report&&!t.report)state.tab='report';saveThread(next);
+    state.auto=next.status==='running'&&name!=='stop';if(next.report&&!t.report)state.tab='report';if(!next.report&&t.report)state.tab='tasks';saveThread(next);
   }catch(err){if(epoch===state.epoch){showNotice(err.message);try{await syncThread(t.id,epoch);}catch{}}}
   finally{state.busy=false;if(epoch===state.epoch){detail();schedule();}}
 }

@@ -1,13 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createThread as createLegacyThread} from '../lib/harness.mjs';
 import {api} from '../lib/api.mjs';
 const payload={goal:'比较白酒概念的表现，核查前一期是否延续',mode:'live',symbol:'886042.TI',benchmark:'000300.SH',days:20,remember:true};
-function client(env={}){
+function client(env={},legacy=true){
   const rows=new Map();let tag=0;
   const store={async get(k){return structuredClone(rows.get(k));},async list(p){return [...rows].filter(([k])=>k.startsWith(p)).map(([,v])=>v.value);},async put(k,value,expected){
     if(expected!==undefined&&(rows.get(k)?.tag??null)!==expected)return null;
     rows.set(k,{value:structuredClone(value),tag:String(++tag)});return String(tag);}};
   async function call(path,body){
+    // Seed persisted v1 threads to exercise backward-compatible resume and approval.
+    if(legacy&&path==='threads'&&body){
+      try{
+        const t=createLegacyThread(body);t.revision=1;
+        await store.put('thread/'+t.id,t);
+        if(body.remember)await store.put('preferences',{benchmark:t.benchmark,days:t.days});
+        return [201,t];
+      }catch(e){return [e.status||400,{error:e.message}];}
+    }
     const r=await api(new Request('https://test.invalid/api/'+path,body===undefined?{}:{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}),env,store);
     return [r.status,await r.json()];
   }
@@ -103,7 +113,7 @@ test('live follow-ups use thread evidence and retain context; invalid citations 
 });
 
 test('production API only offers real data and rejects explicit fixture requests',async()=>{
-  const {call}=client({});
+  const {call}=client({},false);
   assert.deepEqual((await call('meta'))[1].modes,['live']);
   assert.equal((await call('threads',{...payload,mode:'demo'}))[0],400);
   const [status,thread]=await call('threads',{...payload,mode:'live'});
@@ -139,4 +149,86 @@ test('planner failure cannot advance to a market query for an unconfirmed target
   const [,next]=await call('threads/'+t.id+'/step',{});
   assert.equal(next.status,'failed');
   assert.equal(next.evidence.length,0);
+});
+
+function researcher(decisions,source){
+  const requests=[];
+  const env={DEEPSEEK_API_KEY:'test',FUYAO_API_KEY:'test',async fetch(input,options){
+    const url=new URL(input);
+    if(url.hostname==='api.deepseek.com'){
+      const messages=JSON.parse(options.body).messages;
+      requests.push(JSON.parse(messages[1].content));
+      const decision=decisions.shift();
+      assert.ok(decision,'unexpected model request');
+      return Response.json({model:'test-planner',usage:{total_tokens:20},choices:[{finish_reason:'stop',message:{content:JSON.stringify(decision)}}]});
+    }
+    return source(url,options);
+  }};
+  return {...client(env,false),requests};
+}
+const use=(tool,args)=>({action:'tool',tool,args,reason:'核实用户所问指标'});
+const deliver=(ref,text)=>({action:'report',facts:[{text,refs:[ref]}],interpretation:[],unknowns:[]});
+function upstream(data){return Response.json({code:0,data,request_id:'from-provider'});}
+test('free-form gold research asks a question, resolves a real directory symbol, observes prices and continues on follow-up',async()=>{
+  const now=Date.now(),paths=[];
+  const decisions=[{action:'clarify',question:'希望按现货还是沪金期货研究？'},use('futures_lookup',{keyword:'AU'}),use('futures_daily',{symbol:'AU.L8',days:2}),deliver('E2','主连收盘价由100变为102。'),deliver('E2','两个观测间隔的累计收益为2%。')];
+  const {call,requests}=researcher(decisions,url=>{
+    paths.push(url.pathname);
+    if(url.pathname.endsWith('main-continuous-list'))return upstream({timestamp:now,item:[{name:'沪金主连',variety_code:'AU',thscode:'AU.L8'}]});
+    assert.equal(url.searchParams.get('thscode'),'AU.L8');
+    return upstream({thscode:'AU.L8',interval:'1d',item:[3,2,1].map((days,i)=>({timestamp:now-days*86400000,close_price:100+i}))});
+  });
+  let [status,t]=await call('threads',{goal:'分析黄金最近的表现'});
+  assert.equal(status,201);assert.deepEqual(t.tasks.map(x=>x.id),['plan']);
+  async function go(action,body={}){[status,t]=await call('threads/'+t.id+'/'+action,{revision:t.revision,...body});assert.equal(status,200);}
+  await go('step');assert.equal(t.status,'clarification');assert.equal(paths.length,0);
+  await go('clarify',{question:'用沪金期货主连'});
+  await go('step');await go('step');await go('stop');await go('resume');
+  while(t.status==='running')await go('step');
+  assert.equal(t.status,'complete');assert.deepEqual(paths,['/api/futures/contracts/main-continuous-list','/api/futures/prices/daily']);
+  assert.ok(Math.abs(t.evidence[1].raw.metrics.returnPct-2)<1e-8);
+  await go('followup',{question:'这个区间总收益是多少？'});await go('step');
+  assert.equal(t.status,'complete');assert.equal(t.previousReports.length,1);
+  assert.equal(requests.at(-1).evidence.length,2);
+});
+test('new question can initiate a different financial tool from the same report; provider failure produces a documented gap',async()=>{
+  const now=Date.now(),paths=[];
+  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),deliver('E1','快照已取得'),use('stock_flow',{symbol:'600519.SH'}),{action:'blocked',reason:'资金接口无权限'}],url=>{
+    paths.push(url.pathname);
+    return paths.length===1?upstream({timestamp:now,item:[{thscode:'600519.SH',latest_price:100}]}):Response.json({code:2003});
+  });
+  let [,t]=await call('threads',{goal:'查600519.SH最新快照'});
+  const go=async(a,b={})=>{const [status,next]=await call('threads/'+t.id+'/'+a,b);assert.equal(status,200);t=next;};
+  while(t.status==='running')await go('step');
+  await go('followup',{question:'资金流入有多少？'});
+  while(t.status==='running')await go('step');
+  assert.equal(t.status,'partial');assert.match(t.report.unknowns[0],/权限/);
+  assert.deepEqual(paths,['/api/a-share/prices/snapshot','/api/a-share/capital-flow/snapshot']);
+  assert.equal(t.evidence.length,1);assert.equal(t.previousReports.length,1);
+});
+test('new planner rejects unknown tools and fabricated citations',async()=>{
+  for(const decision of [use('invented',{}),deliver('E999','无来源')]){
+    const {call}=researcher([decision],()=>assert.fail('unexpected financial request'));
+    const [,t]=await call('threads',{goal:'核查投资数据'});
+    const [,next]=await call('threads/'+t.id+'/step',{});
+    assert.equal(next.status,'failed');assert.equal(next.report,null);
+  }
+});
+
+test('new agent persists approval before an extra read and records a skipped request',async()=>{
+  let reads=0;
+  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),use('stock_flow',{symbol:'600519.SH'}),
+    use('stock_snapshot',{symbol:'600000.SH'}),deliver('E1','范围内结果已核验')],url=>{
+    reads++;
+    return upstream(url.pathname.includes('capital-flow')?{timestamp:Date.now(),large:{net_amount:123}}:{timestamp:Date.now(),item:[{thscode:'600519.SH',latest_price:123}]});
+  });
+  const [,created]=await call('threads',{goal:'600519.SH 的快照和资金呢？也补充 600000.SH 快照。'});
+  let t=created;
+  const go=async a=>{const [s,v]=await call('threads/'+t.id+'/'+a,{revision:t.revision});assert.equal(s,200);t=v;};
+  while(t.status==='running')await go('step');
+  assert.equal(t.status,'approval');assert.equal(reads,2);
+  assert.equal((await call('threads/'+t.id))[1].approval,t.approval);
+  await go('skip');await go('step');
+  assert.equal(t.status,'complete');assert.equal(reads,2);
+  assert.ok(t.tasks.some(x=>x.status==='skipped'));
 });

@@ -11,6 +11,8 @@ for (const [name, pattern] of Object.entries(fields)) {
   if (!value) throw new Error('本地启动缺少 ' + name + '；请检查父目录中的相关信息.md 或现有环境变量。');
   process.env[name] = value;
 }
+const privateIfind=note.match(/复制 MCP 密钥[：:]\s*([^\s]+)/i)?.[1];
+if(!process.env.IFIND_MCP_KEY&&privateIfind)process.env.IFIND_MCP_KEY=privateIfind;
 if (process.argv.includes('--verify-live')) {
   await import('./verify-live.mjs');
 } else {
