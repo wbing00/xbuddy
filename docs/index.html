@@ -1,0 +1,716 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e38">
+  <meta name="description" content="投资 X Buddy 个人研究工作台">
+  <title>投资 X Buddy · 研究工作台</title>
+  <link rel="icon" href="data:,">
+  <style>:root{--paper:#f6f6f1;--card:#fffefa;--ink:#172e2a;--muted:#61716b;--line:#dce2d9;--pine:#174039;--green:#236658;--lime:#d7eeb6;--gold:#91682c;--sans:Inter,"PingFang SC","Microsoft YaHei",sans-serif;--serif:"Songti SC","Noto Serif CJK SC","STSong","SimSun",serif;--mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;--shadow:0 6px 24px #1d352c08}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased}button,input,textarea,select{font:inherit}button,select,summary{cursor:pointer}button{color:inherit}button:disabled{cursor:default;opacity:.5}button:focus-visible,a:focus-visible,textarea:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid #a78642;outline-offset:3px}a{color:var(--green)}.skip{position:fixed;top:-100px;left:12px;background:white;padding:12px;z-index:50}.skip:focus{top:8px}[hidden]{display:none!important}h1,h2,h3,h4,p{margin:0}button{border:0}.workspace{min-height:100vh;display:grid;grid-template-columns:232px minmax(0,1fr)}.rail{display:flex;flex-direction:column;color:#edf4e9;background:#163e37;padding:32px 19px 16px;position:sticky;top:0;height:100dvh;z-index:5}.brand{display:flex;align-items:center;gap:12px;margin:0 5px 36px}.brand strong{font:600 29px/1.1 Georgia,"Times New Roman",serif;letter-spacing:-1px;display:block}.brand small{font-size:11px;letter-spacing:.13em;color:#b3c8bc;display:block;margin-top:5px}.brand-mark{display:flex;gap:3px;align-items:center;width:38px;height:42px;transform:skew(-15deg)}.brand-mark i{display:block;background:var(--lime);width:9px;height:22px}.brand-mark i:nth-child(2){height:36px}.brand-mark i:last-child{height:27px}.new-thread{background:var(--lime);color:#133c2e;border:1px solid #d5ecaf;border-radius:6px;padding:10px;display:flex;align-items:center;justify-content:center;gap:7px;font-weight:650}.new-thread:hover,.primary:hover{filter:brightness(.94)}.new-thread span{font:23px/1 var(--sans)}.rail-heading{display:flex;align-items:center;justify-content:space-between;margin:30px 7px 10px;color:#b4c8be;font-size:12px}.rail-heading span{font:11px var(--mono);color:#d5e4d9}.rail nav{overflow:auto;min-height:0;scrollbar-width:thin}.thread{display:flex;gap:9px;width:100%;align-items:flex-start;text-align:left;border-radius:6px;padding:10px 8px;color:#dfebe2;background:transparent}.thread:hover,.thread[aria-current=true]{background:#2a5148}.thread[aria-current=true]{box-shadow:inset 2px 0 var(--lime)}.thread .title{min-width:0}.thread strong,.thread small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.thread strong{font-weight:500;font-size:13px}.thread small,.rail-empty{font-size:11px;color:#b2c8bd}.rail-empty{padding:8px}.thread-icon{font:17px var(--sans);color:#adc8b7}.rail-foot{display:flex;align-items:center;gap:10px;padding:18px 3px 0;border-top:1px solid #ffffff23;margin-top:auto}.avatar{display:grid;place-items:center;border:1px solid #789589;border-radius:50%;width:34px;height:34px;color:#d8e6d0;font-family:var(--serif)}.rail-foot strong,.rail-foot small{display:block}.rail-foot strong{font-size:13px;font-weight:500}.rail-foot small{color:#aec3b7;font-size:11px}.surface{min-width:0}.topbar{border-bottom:1px solid var(--line);height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,68px);background:#fafaf6}.topbar>div{display:flex;gap:13px;align-items:center}.topbar span,.topbar b{color:var(--muted);font-size:12px;font-weight:400}.topbar strong{font-size:12px;font-weight:580}.topbar time{font:12px var(--mono);color:var(--muted);white-space:nowrap}main{max-width:1440px;margin:auto;padding:clamp(22px,3.7vw,58px) clamp(20px,4vw,68px) 60px}.mobile{display:none}.iconbutton{background:transparent;color:inherit;font-size:22px;padding:2px 6px}.shade{position:fixed;inset:0;background:#162e2590;z-index:4}
+.heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:24px}.heading h1{font:650 clamp(30px,3.2vw,48px)/1.25 var(--serif);letter-spacing:-.04em;overflow-wrap:anywhere}.heading p{color:var(--muted);font-size:14px;margin-top:9px}.heading time,.mono{font-family:var(--mono)}.home-grid,.detail-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.45fr);gap:20px;align-items:start}.box{border:1px solid var(--line);background:var(--card);border-radius:12px;box-shadow:var(--shadow);min-width:0}.box-inner{padding:21px 23px}.compose{overflow:hidden}.compose-top{background:var(--pine);color:white;position:relative;isolation:isolate;overflow:hidden;padding:23px 25px;min-height:97px;display:flex;flex-direction:column;justify-content:center}.compose-top:after{content:"";position:absolute;right:-36px;top:-105px;width:245px;height:245px;border-radius:44% 53% 44% 44%;background:repeating-radial-gradient(ellipse at 60% 25%,transparent 0 7px,#d9eeb52e 7.5px 8.5px,transparent 9px 13px);transform:rotate(21deg);z-index:-1;pointer-events:none;opacity:.8}.compose-top h2{font:600 22px/1.4 var(--serif)}.compose-top p{color:#c2d7c8;font-size:12px;margin-top:4px}.form-body{padding:20px 23px 23px}.field{display:block;margin-bottom:16px}.field>span,.label{display:block;font-size:12px;color:#475d51;font-weight:650;margin-bottom:6px}textarea,select,input[type=number],input[type=text]{width:100%;max-width:100%;border:1px solid #cad6ca;border-radius:6px;background:#fffefa;color:var(--ink);padding:9px 10px}textarea{resize:vertical;min-height:116px;line-height:1.75}textarea::placeholder{color:#7a8982}.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:12px}.btn-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.primary,.secondary,.quiet,.danger{padding:9px 14px;border-radius:6px;font-size:13px;font-weight:600}.primary{background:var(--pine);color:white}.secondary,.danger{border:1px solid #cad4c9;background:var(--card)}.secondary:hover,.quiet:hover{background:#eef3e9}.danger{color:#9a4934}.quiet{background:transparent;color:var(--green)}.btn-row.end{justify-content:flex-end}.side-stack,.stack{display:grid;gap:16px;min-width:0}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.section-head h2,.section-head h3,.box h3{font:650 18px/1.45 var(--serif)}.section-head small,.muted{color:var(--muted);font-size:12px}.section-head{margin-bottom:12px}.template{display:block;text-align:left;background:transparent;width:100%;padding:13px 0;border-top:1px solid var(--line)}.template:hover strong{color:var(--green);text-decoration:underline;text-underline-offset:3px}.template strong{display:block;font-size:13px}.template small{display:block;font-size:12px;color:var(--muted);margin-top:4px}.templates .template:last-child{padding-bottom:0}.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:20px;background:#edf2e8;color:#3f6048;font-size:11px;line-height:1.5;white-space:nowrap}.pill.warn{background:#fbefd9;color:#805616}.pill.error{background:#fbece8;color:#903f30}.pill.running{background:#dceee7;color:#205740}.detail-hero{padding:22px 24px;margin-bottom:18px;border-top:3px solid var(--green)}.goal{margin:8px 0 16px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}.tabs{display:flex;gap:18px;border-bottom:1px solid var(--line);margin:4px 0 15px;overflow-x:auto}.tabs button{background:none;white-space:nowrap;padding:10px 2px 9px;border-bottom:2px solid transparent;color:var(--muted)}.tabs button[aria-pressed=true]{border-color:var(--green);color:var(--pine);font-weight:650}.message{padding:11px 14px;border:1px solid #dce5ce;border-radius:7px;background:#f1f5e9;color:#345340;margin:12px 0;overflow-wrap:anywhere}.message.warn{background:#faf4e8;border-color:#eadbbf;color:#705326}.message.error{background:#fff0ea;border-color:#efd1c4;color:#8c3f29}.message p{margin:4px 0}.message .btn-row{margin-top:9px}.step{padding:13px 0;border-top:1px solid var(--line);display:flex;align-items:flex-start;gap:11px}.step .num{background:#e9eee4;border:1px solid #d2dccd;border-radius:50%;width:25px;height:25px;display:grid;place-items:center;flex:none;font:11px var(--mono);color:#486951}.step .num.done{background:var(--pine);color:white}.step-content{flex:1;min-width:0}.step-content strong{font-size:14px}.step-content p{font-size:12px;color:var(--muted);margin-top:2px}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.wrap{flex-wrap:wrap}.kv{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;border-top:1px solid var(--line);padding:9px 0;font-size:12px}.kv span{color:var(--muted)}.kv strong{font-weight:550;text-align:right;overflow-wrap:anywhere}.record{border-top:1px solid var(--line);padding:12px 0}.record summary{font-weight:600;overflow-wrap:anywhere}.record p{color:var(--muted);font-size:13px;margin:7px 0}.raw{background:#f1f3ed;border-radius:6px;padding:11px;white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:340px;font:12px/1.6 var(--mono)}.notice{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:12px 18px;border-radius:6px;background:#183c32;color:#fff;box-shadow:0 8px 25px #0002;z-index:10;max-width:min(90vw,650px);overflow-wrap:anywhere}.artifact{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.85}.empty{padding:16px 0;color:var(--muted);font-size:13px}.history{margin-top:25px}.history-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:12px}.history-card{text-align:left;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:15px;min-width:0}.history-card:hover{border-color:#8ca595}.history-card strong{display:block;margin:8px 0;overflow-wrap:anywhere}.help{color:var(--muted);font-size:12px;margin:6px 0 14px}.stats{display:flex;gap:16px;flex-wrap:wrap}.stat{min-width:100px}.stat strong{display:block;font:500 23px var(--mono)}.stat small{color:var(--muted)}
+@media(min-width:1500px){.workspace{grid-template-columns:260px minmax(0,1fr)}}
+@media(max-width:1140px){.workspace{grid-template-columns:195px minmax(0,1fr)}.rail{padding:25px 14px 15px}.home-grid,.detail-grid{grid-template-columns:minmax(0,1fr) minmax(200px,.48fr);gap:14px}.box-inner,.form-body{padding:18px}.compose-top{padding:20px}.fields{grid-template-columns:repeat(auto-fit,minmax(125px,1fr))}}
+@media(max-width:920px){.home-grid,.detail-grid{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(auto-fit,minmax(min(216px,100%),1fr))}.heading{margin-bottom:18px}}
+@media(max-width:700px){.workspace{display:block}.rail{position:fixed;inset:0 auto 0 0;transform:translateX(-101%);width:min(266px,85vw);transition:transform .18s ease}.rail.open{transform:translateX(0)}.mobile{display:inline-block}.brand .iconbutton{margin-left:auto}.topbar{height:52px;padding:0 14px}.topbar>div{gap:8px}.topbar time{font-size:10px}.heading{align-items:flex-start}.heading h1{font-size:31px}.heading p{font-size:13px}.box-inner,.form-body{padding:16px}.detail-hero{padding:16px}main{padding:23px 15px 44px}.fields{grid-template-columns:repeat(auto-fit,minmax(120px,1fr))}.section-head h2,.box h3{font-size:17px}.side-stack{grid-template-columns:1fr}.btn-row button{min-height:38px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{.rail,.topbar,.tabs,.new-thread,.notice,button,.shade{display:none!important}.workspace,.detail-grid{display:block}main{padding:0}.box{box-shadow:none}.detail-hero{break-inside:avoid}body{background:white}}
+.mode-switch{margin:0 0 13px;border:0;padding:0;display:flex;gap:5px;flex-wrap:wrap}.mode-switch legend{font-size:12px;font-weight:650;color:#475d51;margin-bottom:6px}.mode-switch label{position:relative;cursor:pointer}.mode-switch input{opacity:0;position:absolute}.mode-switch input:focus-visible+span{outline:3px solid #a78642;outline-offset:2px}.mode-switch span{display:block;border:1px solid var(--line);border-radius:5px;padding:6px 10px;font-size:12px}.mode-switch input:checked+span{border-color:#6b9281;background:#edf5e6;color:#244d37;font-weight:650}.remember{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px}.remember input{accent-color:var(--pine)}.template strong span{float:right;color:#819b83}.report-block{padding:12px 0;border-top:1px solid var(--line)}.report-block h3{font:600 14px var(--sans)}.report-block ul{padding-left:1.35em;margin:8px 0 0}.report-block li{margin:5px 0;line-height:1.75}.ref{background:#eaf2e5;border-radius:4px;color:#30563a;font:11px var(--mono);padding:3px 5px}.event{display:grid;grid-template-columns:93px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:13px;overflow-wrap:anywhere}.event time{font:11px/1.8 var(--mono);color:var(--muted)}.context{font-size:12px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.chart{padding:15px;border:1px solid var(--line);border-radius:6px;background:#f8faf4;margin:15px 0}.chart figcaption,.chart-foot{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}.chart figcaption small,.chart-foot span{font:10px/1.5 var(--mono);color:var(--muted)}.chart figcaption strong{font-size:14px}.chart-legend{display:flex;flex-wrap:wrap;gap:13px;font-size:11px;margin:9px 0 3px}.chart-legend span{display:flex;align-items:center;gap:5px}.chart-legend i{width:13px;height:3px;background:#226354}.chart-legend span+span i{background:#a2854e}.chart-legend b{font:11px var(--mono)}.chart canvas{display:block;width:100%;height:150px}.chart-foot{margin-top:5px}.followup{padding-top:14px;border-top:1px solid var(--line);display:flex;align-items:flex-end;gap:8px}.followup .field{flex:1;margin:0}.followup button{white-space:nowrap}
+.tools-list{border-top:1px solid var(--line);font-size:12px;color:var(--muted);padding-top:9px}.tools-list summary{color:var(--green)}.tools-list .kv{font-size:11px}.tools-list>.kv:nth-child(2){margin-top:6px}
+@media(max-width:700px){.rail{visibility:hidden}.rail.open{visibility:visible}}
+</style>
+
+</head>
+<body>
+  <a class="skip" href="#main">跳到研究工作区</a>
+  <div class="workspace">
+    <button class="shade" id="shade" type="button" aria-label="关闭导航" hidden></button>
+    <aside id="rail" class="rail" aria-label="工作台导航">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>X Buddy</strong><small>投资研究工作台</small></div><button id="close-menu" class="mobile iconbutton" aria-label="关闭导航">×</button></div>
+      <button id="new-thread" class="new-thread"><span aria-hidden="true">＋</span> 新建研究</button>
+      <div class="rail-heading">研究线程 <span id="thread-count">0</span></div>
+      <nav id="threads" aria-label="研究线程"></nav>
+      <div class="rail-foot"><span class="avatar" aria-hidden="true">研</span><div><strong>个人工作区</strong><small>投资研究员</small></div></div>
+    </aside>
+    <div class="surface">
+      <header class="topbar"><div><button class="mobile iconbutton" id="menu" aria-label="打开导航" aria-expanded="false" aria-controls="rail">☰</button><span>工作空间</span><b aria-hidden="true">/</b><strong id="breadcrumb">研究工作台</strong></div><time id="today"></time></header>
+      <main id="main" tabindex="-1"></main>
+    </div>
+  </div>
+  <div id="notice" class="notice" role="status" hidden></div>
+<script>(()=>{const {getIndexHistory,compareIndices,modelJSON} = (() => {
+const DAY = 86_400_000;
+const SHANGHAI_OFFSET = 8 * 3_600_000;
+const FUYAO = 'https://fuyao.aicubes.cn';
+const HISTORY = '/api/a-share-index/prices/historical';
+const CALENDAR = '/api/a-share/calendar/trading-days';
+
+function fail(code, message) {
+  throw Object.assign(new Error(message), { code });
+}
+
+function requireKey(value, provider) {
+  if (!value) fail('NOT_CONFIGURED', provider + ' 的服务端密钥尚未配置。');
+  return value;
+}
+
+async function requestJSON(url, options, provider, env, timeout = 12_000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const response = await (env.fetch || fetch)(url, { ...options, redirect: 'error', signal: controller.signal });
+    if (!response.ok) fail('HTTP_' + response.status, provider + ' 返回 HTTP ' + response.status + '。');
+    try {
+      return await response.json();
+    } catch {
+      fail('INVALID_RESPONSE', provider + ' 的响应无法解析。');
+    }
+  } catch (error) {
+    if (controller.signal.aborted) fail('TIMEOUT', provider + ' 响应超时。');
+    if (error.code && typeof error.code === 'string' && error.code.match(/^(HTTP_\d+|INVALID_RESPONSE)$/)) throw error;
+    fail('NETWORK', '无法连接' + provider + '，请检查服务端网络。');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fuyao(path, params, env) {
+  const key = requireKey(env.FUYAO_API_KEY, '扶摇');
+  const url = new URL(path, FUYAO);
+  url.search = new URLSearchParams(params).toString();
+  const payload = await requestJSON(url, { headers: { 'X-api-key': key } }, '扶摇', env);
+  if (!Number.isInteger(payload?.code)) fail('INVALID_RESPONSE', '扶摇响应缺少业务状态码。');
+  if (payload.code !== 0) {
+    const reasons = { 2001: '认证失败', 2003: '当前账号无此工具权限', 4001: '请求受到限流' };
+    fail('FUYAO_' + payload.code, '扶摇' + (reasons[payload.code] || '查询失败') + '（' + payload.code + '）。');
+  }
+  if (!Array.isArray(payload.data?.item)) fail('INVALID_RESPONSE', '扶摇响应缺少 data.item 数组。');
+  return { data: payload.data, requestId: payload.request_id || null, url: url.href };
+}
+
+function shDate(ms) {
+  return new Date(ms + SHANGHAI_OFFSET).toISOString().slice(0, 10);
+}
+
+function dateStart(date) {
+  const ms = Date.parse(date + 'T00:00:00+08:00');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Number.isFinite(ms) || shDate(ms) !== date) {
+    fail('BAD_DATE', '截止日必须是有效的 YYYY-MM-DD 日期。');
+  }
+  return ms;
+}
+
+async function getIndexHistory({ symbol, days = 5, asOf }, env = {}) {
+  if (!/^\d{6}\.(SH|SZ|TI)$/.test(symbol)) fail('BAD_SYMBOL', '指数代码格式无效。');
+  if (!Number.isInteger(days) || days < 1 || days > 120) fail('BAD_WINDOW', '交易日数应在 1 至 120 之间。');
+  const now = Date.now();
+  const today = shDate(now);
+  const requestedDate = asOf || today;
+  if (dateStart(requestedDate) > dateStart(today)) fail('BAD_DATE', '截止日不能晚于今天。');
+  const cutoff = requestedDate === today && now < dateStart(today) + 15 * 3_600_000
+    ? shDate(dateStart(today) - DAY) : requestedDate;
+  const from = shDate(dateStart(cutoff) - (days * 2 + 25) * DAY);
+  const calendar = await fuyao(CALENDAR, {
+    start_date: from.replaceAll('-', ''), end_date: cutoff.replaceAll('-', ''),
+  }, env);
+  const allDates = calendar.data.item.map(row => {
+    const compact = String(row?.date || '');
+    if (!/^\d{8}$/.test(compact)) fail('INVALID_CALENDAR', '交易日历缺少日期。');
+    const date = compact.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
+    dateStart(date);
+    if (date < from || date > cutoff) fail('INVALID_CALENDAR', '交易日历返回区间外日期。');
+    return date;
+  });
+  if (new Set(allDates).size !== allDates.length) fail('INVALID_CALENDAR', '交易日历包含重复日期。');
+  const dates = allDates.sort().slice(-days - 1);
+  if (dates.length !== days + 1) fail('INSUFFICIENT_DATA', '交易日历覆盖不足，无法确定完整比较区间。');
+  if (dateStart(cutoff) - dateStart(dates.at(-1)) > 12 * DAY) fail('STALE', '交易日历明显滞后于请求截止日。');
+  const result = await fuyao(HISTORY, {
+    thscode: symbol, interval: '1d', start: dateStart(dates[0]), end: dateStart(dates.at(-1)) + DAY - 1,
+  }, env);
+  const records = new Map();
+  for (const row of result.data.item) {
+    if (!Number.isSafeInteger(row?.date_ms) || Math.abs(row.date_ms) > 8e15) fail('INVALID_DATA', '指数日线缺少有效时间戳。');
+    const date = shDate(row.date_ms);
+    if (records.has(date)) fail('CONFLICT', '同一交易日有多条指数日线，需核查。');
+    records.set(date, row);
+  }
+  const points = dates.map(date => {
+    const row = records.get(date);
+    if (!Number.isFinite(row?.close_price) || row.close_price <= 0) fail('MISSING_CLOSE', symbol + ' 缺失有效收盘点位：' + date);
+    return { date, close: row.close_price, date_ms: row.date_ms, close_price: row.close_price };
+  });
+  return {
+    symbol, days, asOf: requestedDate, start: dates[0], end: dates.at(-1), points,
+    source: '扶摇 · 同花顺金融数据', requestId: result.requestId, url: result.url,
+    retrievedAt: new Date().toISOString(), unit: '指数点', field: 'data.item[].close_price',
+    calendar: { url: calendar.url, requestId: calendar.requestId, cutoff, dates },
+    method: '上海交易日历；收盘点位；含期初基准日。实际末日 ' + dates.at(-1) + '。',
+  };
+}
+
+function compareIndices(target, benchmark) {
+  const n = target.days;
+  if (!Number.isInteger(n) || n < 1 || n !== benchmark.days || target.points?.length !== n + 1 ||
+      benchmark.points?.length !== n + 1) fail('MISSING_CLOSE', '区间首尾及中间交易日数据不完整。');
+  const series = target.points.map((point, i) => {
+    const base = benchmark.points[i];
+    if (point.date !== base.date || (i && target.points[i - 1].date >= point.date)) {
+      fail('DATE_MISMATCH', '两组日线的日期未对齐或存在重复。');
+    }
+    if (![point.close, base.close].every(v => Number.isFinite(v) && v > 0)) fail('INVALID_DATA', '收盘值必须是有效正数。');
+    return {
+      date: point.date, targetClose: point.close, benchmarkClose: base.close,
+      targetPct: (point.close / target.points[0].close - 1) * 100,
+      benchmarkPct: (base.close / benchmark.points[0].close - 1) * 100,
+    };
+  });
+  const last = series.at(-1);
+  return {
+    start: series[0].date, end: last.date, targetPct: last.targetPct, benchmarkPct: last.benchmarkPct,
+    excessPp: last.targetPct - last.benchmarkPct, series,
+  };
+}
+
+async function modelJSON({ system, user }, env = {}) {
+  const key = requireKey(env.DEEPSEEK_API_KEY, 'DeepSeek');
+  const model = env.DEEPSEEK_MODEL || 'deepseek-flash';
+  const response = await requestJSON('https://api.deepseek.com/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key },
+    body: JSON.stringify({
+      model, messages: [
+        { role: 'system', content: system + '\n只返回一个 JSON 对象。' },
+        { role: 'user', content: typeof user === 'string' ? user : JSON.stringify(user) },
+      ],
+      response_format: { type: 'json_object' }, thinking: { type: 'disabled' }, max_tokens: 900, stream: false,
+    }),
+  }, 'DeepSeek', env, 22_000);
+  const choice = response?.choices?.[0];
+  if (choice?.finish_reason !== 'stop') fail('MODEL_INCOMPLETE', '模型未正常完成结构化输出。');
+  let value;
+  try { value = JSON.parse(choice.message.content); } catch { fail('MODEL_FORMAT', '模型未返回有效 JSON。'); }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) fail('MODEL_FORMAT', '模型结果应为 JSON 对象。');
+  return { value, model: response.model || model, usage: response.usage || null };
+}
+
+return {getIndexHistory,compareIndices,modelJSON};
+})();
+const {action,benchmarks,createThread,problem,registry,step,subjects} = (() => {
+
+
+const subjects=[
+  {symbol:'886042.TI',name:'白酒概念'},{symbol:'000300.SH',name:'沪深300'},
+  {symbol:'000001.SH',name:'上证综指'},{symbol:'399001.SZ',name:'深证成指'}
+];
+const benchmarks=subjects.filter(x=>x.symbol!=='886042.TI');
+const nameOf=s=>subjects.find(x=>x.symbol===s)?.name||s;
+const registry={
+  plan:{label:'制定研究计划',permission:'model',limitMs:35000},
+  target:{label:'查询研究指数',permission:'read',limitMs:30000},
+  benchmark:{label:'查询对照基准',permission:'read',limitMs:30000},
+  compare:{label:'对齐交易日并计算指标',permission:'compute',limitMs:1000},
+  extend:{label:'核查上一观察窗口',permission:'approval',limitMs:60000},
+  report:{label:'核验引用并生成研究简报',permission:'compute',limitMs:1000}
+};
+function problem(message,status=400){return Object.assign(new Error(message),{status});}
+const timestamp=()=>new Date().toISOString();
+function log(t,text){t.events.push({at:timestamp(),text});}
+const refs=(text,...refs)=>({text,refs});
+const pct=n=>Number(n).toFixed(2);
+const dayText=x=>x.slice(0,10);
+function createThread(input){
+  const goal=String(input.goal||'').trim(),{symbol,benchmark,mode}=input,days=Number(input.days);
+  if(!goal||goal.length>500)throw problem('请输入 1–500 字的研究目标');
+  if(!subjects.some(x=>x.symbol===symbol)||!benchmarks.some(x=>x.symbol===benchmark)||symbol===benchmark)throw problem('请选择不同的研究指数与基准');
+  if(![5,10,20].includes(days)||!['demo','live'].includes(mode))throw problem('观察窗口或数据模式无效');
+  const now=timestamp();
+  const t={id:crypto.randomUUID(),goal,title:nameOf(symbol)+'相对表现研究',symbol,benchmark,days,mode,status:'running',createdAt:now,updatedAt:now,
+    tasks:Object.entries(registry).map(([id,v])=>({id,label:v.label,status:'pending',detail:''})),events:[],evidence:[],report:null,metrics:{calls:0,limit:12,tokens:0,elapsedMs:0},summary:'',approval:'',error:'',approved:false,attempts:{},focus:'relative',asOf:mode==='demo'?'2025-03-21':new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai'}).format(new Date()),limits:{maxActiveMs:240000,maxRetries:2}};
+  log(t,mode==='demo'?'已建立演练线程，使用可复算的构造数据':'已建立实数研究线程');
+  if(/(买入|卖出|买卖|推荐买|该买|该卖|能买|能卖|买哪|稳赚|保证收益|翻倍|涨停预测|必涨|必跌|预测涨跌)/.test(goal)){
+    t.status='partial';t.tasks.forEach(x=>x.status='skipped');t.report={title:'研究边界说明',facts:[],interpretation:[],unknowns:['此任务涉及交易建议或确定性预测。可以新建任务，研究已发生的相对表现与回撤。']};
+    log(t,'边界检查结束，未发起外部调用');
+  }
+  return t;
+}
+function demoHistory(symbol,days){
+  const dates=[];const d=new Date('2025-03-21T12:00:00Z');
+  while(dates.length<41){if(d.getUTCDay()%6!==0)dates.unshift(dayText(d.toISOString()));d.setUTCDate(d.getUTCDate()-1);}
+  const j=subjects.findIndex(x=>x.symbol===symbol)+1;
+  const points=dates.map((date,i)=>({date,close:Number((2500+j*220+i*(4-j)+Math.sin(i*.82+j)*42+Math.cos(i*.23)*20).toFixed(2))})).slice(-days-1);
+  return {symbol,days,asOf:'2025-03-21',points,source:'教学构造样本',requestId:'fixture-v1-'+symbol,retrievedAt:'2025-03-21T08:00:00Z',url:''};
+}
+function evidence(t,id,label,unit,method,raw,source,url='',asOf=t.asOf){
+  t.evidence.push({id,label,source,asOf,unit,method,raw,url});
+}
+function historyEvidence(t,id,h){
+  evidence(t,id,nameOf(h.symbol)+'收盘序列','指数点','按日期升序，首个收盘价作为区间起点。',h,h.source,h.url,h.points.at(-1).date);
+}
+function charge(t,n){if(t.metrics.calls+n>t.metrics.limit)throw problem('已达到本次研究的工具调用上限');t.metrics.calls+=n;}
+async function history(t,symbol,days,env){charge(t,1);return t.mode==='demo'?demoHistory(symbol,days):getIndexHistory({symbol,days,asOf:t.evidence.find(e=>e.id==='E1')?.raw.points.at(-1).date||t.asOf},env);}
+function drawdown(points){
+  let peak=points[0],max=0,from=peak.date,to=peak.date;
+  for(const p of points){if(p.close>peak.close)peak=p;const loss=(1-p.close/peak.close)*100;if(loss>max){max=loss;from=peak.date;to=p.date;}}
+  return {pct:max,from,to};
+}
+function makeReport(t,reason=''){
+  const c=t.evidence.find(e=>e.id==='C1')?.raw,x=t.evidence.find(e=>e.id==='C2')?.raw;
+  const facts=[];
+  if(c){
+    facts.push(refs(c.start+' 至 '+c.end+'，'+nameOf(t.symbol)+'区间收益 '+pct(c.targetPct)+'%，'+nameOf(t.benchmark)+'为 '+pct(c.benchmarkPct)+'%，相差 '+pct(c.excessPp)+' 个百分点。','E1','E2','C1'));
+    facts.push(refs('按区间内每日收盘点位计算，研究指数最大回撤为 '+pct(c.drawdown.pct)+'%（'+c.drawdown.from+' 至 '+c.drawdown.to+'）。','E1','C1'));
+    if(t.focus==='risk')facts.reverse();
+  }
+  if(x)facts.push(refs('前一等长窗口相对基准的收益差为 '+pct(x.excessPp)+' 个百分点。','E3','E4','C2'));
+  return {title:nameOf(t.symbol)+' · '+t.days+' 日复盘',facts,interpretation:c?[c.excessPp>=0?'研究指数在该窗口的表现至少与基准持平。':'研究指数在该窗口落后于基准。']:[],
+    unknowns:[...(reason?[reason]:[]),'指数收盘序列无法确定个股上涨覆盖率、成分贡献或行情成因。',...(t.mode==='demo'?['使用构造数据演练流程，所有数值仅用于复算。']:[])]};
+}
+function compress(t){
+  t.summary=t.goal+'｜标的 '+t.symbol+' / '+t.benchmark+'｜窗口 '+t.days+' 日｜已完成 '+t.tasks.filter(x=>x.status==='done').map(x=>x.label).join('、')+'｜证据 '+t.evidence.map(e=>e.id).join('、')+'｜扩展授权 '+(t.approved?'已批准':'未批准')+'｜待办 '+t.tasks.filter(x=>x.status==='pending').map(x=>x.label).join('、');
+}
+function action(t,act){
+  if(act==='stop'&&t.status==='running'){t.status='paused';log(t,'用户暂停执行');}
+  else if(act==='resume'&&t.status==='paused'){t.status='running';log(t,'从最近检查点继续');}
+  else if(act==='retry'&&t.status==='failed'){
+    const task=t.tasks.find(x=>x.status==='failed');
+    if(!task||t.attempts[task.id]>t.limits.maxRetries)throw problem('该步骤重试次数已用完，可交付阶段结果');
+    task.status='pending';t.status='running';t.error='';log(t,'用户重试失败步骤，复用已取得的证据');
+  }else if(['approve','skip'].includes(act)&&t.status==='approval'){
+    t.approved=act==='approve';t.status='running';t.approval='';if(!t.approved)t.tasks.find(x=>x.id==='extend').status='skipped';
+    log(t,t.approved?'已批准扩大查询窗口':'已跳过扩展，保留原始研究范围');
+  }else if(act==='finish'&&['approval','failed','paused','running'].includes(t.status)){
+    t.status='partial';t.approval='';t.report=makeReport(t,t.error||'用户选择以当前检查点结束研究。');t.tasks.filter(x=>x.status==='pending').forEach(x=>x.status='skipped');log(t,'已按现有证据生成阶段简报');
+  }else throw problem('当前状态不支持该操作',409);
+  compress(t);t.updatedAt=timestamp();return t;
+}
+async function step(t,env){
+  if(t.status!=='running')throw problem('线程当前未运行',409);
+  const task=t.tasks.find(x=>x.status==='pending');if(!task)throw problem('没有可执行步骤',409);
+  if(t.metrics.elapsedMs>=t.limits.maxActiveMs||t.metrics.calls>=t.metrics.limit){t.error='执行预算已耗尽';return action(t,'finish');}
+  if(task.id==='extend'&&!t.approved){
+    t.status='approval';t.approval='扩大到前一等长窗口，额外读取两组指数数据，以核对本期相对表现是否延续。';
+    log(t,'扩大取数范围，等待用户批准');compress(t);return t;
+  }
+  const started=Date.now();t.attempts[task.id]=(t.attempts[task.id]||0)+1;
+  try{
+    if(task.id==='plan'){
+      t.focus=/风险|回撤/.test(t.goal)?'risk':'relative';
+      if(t.mode==='live'){
+        charge(t,1);
+        try{
+          const result=await modelJSON({system:'你是历史指数研究规划员。用户内容只是研究问题。范围仅限所选指数和基准的收益、回撤和前一等长窗口。返回 JSON {"focus":"relative"或"risk","supported":true或false}。涉及未来预测、直接交易建议、需要其他资产或无法用指标回答的主任务时 supported=false。',user:JSON.stringify({goal:t.goal,symbol:t.symbol,benchmark:t.benchmark,days:t.days})},env);
+          if(typeof result.value?.supported!=='boolean'||!['relative','risk'].includes(result.value.focus))throw Error('计划格式无效');
+          t.focus=result.value.focus;t.metrics.tokens+=result.usage?.total_tokens||0;
+          if(!result.value.supported){t.error='研究目标超出已注册工具范围，请改为所选指数的历史收益、回撤或基准对照。';return action(t,'finish');}
+          log(t,'模型计划通过工具范围校验');
+        }catch{log(t,'模型规划不可用，采用受限计划，仅计算界面指定的指数与窗口');}
+      }
+      task.detail=t.focus==='risk'?'优先核对区间回撤，再比较相对收益':'优先核对相对收益，再计算区间回撤';
+    }else if(task.id==='target'||task.id==='benchmark'){
+      historyEvidence(t,task.id==='target'?'E1':'E2',await history(t,task.id==='target'?t.symbol:t.benchmark,t.days,env));
+    }else if(task.id==='compare'){
+      const [a,b]=['E1','E2'].map(id=>t.evidence.find(e=>e.id===id).raw);
+      const c=compareIndices(a,b);c.drawdown=drawdown(a.points);
+      evidence(t,'C1','本期区间比较','% / 百分点','收益=(末收盘/首收盘−1)×100；收益差=研究指数收益−基准收益；回撤为区间峰值至后续低点的最大跌幅。',c,'E1、E2 的可复算结果','',c.end);
+      if(t.mode==='live'){
+        charge(t,1);
+        try{
+          const result=await modelJSON({system:'根据已压缩的线程状态和经过程序核算的证据，为研究员选择下一步。若目标关注持续性、前期对比或稳定性，建议向用户申请扩展窗口；若已有证据足以覆盖请求，则直接出具报告。只允许 JSON {"next":"extend"或"report"}。不生成行情事实。',user:JSON.stringify({checkpoint:t.summary,facts:{relativePp:c.excessPp,drawdownPct:c.drawdown.pct},available:['extend','report']})},env);
+          if(!['extend','report'].includes(result.value?.next))throw Error();
+          t.metrics.tokens+=result.usage?.total_tokens||0;
+          if(result.value.next==='report'){t.tasks.find(x=>x.id==='extend').status='skipped';log(t,'模型根据当前证据选择出具报告，未申请扩大研究范围');}
+          else log(t,'模型根据检查点和相对表现申请核查前一期');
+        }catch{log(t,'后续规划不可用，提供可跳过的人工扩展选择');}
+      }
+    }else if(task.id==='extend'){
+      const h=[];
+      for(const [id,symbol] of [['E3',t.symbol],['E4',t.benchmark]]){
+        let item=t.evidence.find(x=>x.id===id);
+        if(!item){const raw=await history(t,symbol,2*t.days,env);historyEvidence(t,id,raw);item=t.evidence.at(-1);}
+        h.push({...item.raw,days:t.days,points:item.raw.points.slice(0,t.days+1)});
+      }
+      const c=compareIndices(h[0],h[1]);
+      if(c.end!==t.evidence.find(e=>e.id==='C1').raw.start)throw problem('前一窗口未衔接本期起点，无法比较。');
+      evidence(t,'C2','前一窗口比较','% / 百分点','取扩展序列的前一个等长区间，在本期起点收盘处衔接。',c,'E3、E4 的可复算结果','',c.end);
+    }else if(task.id==='report'){t.report=makeReport(t);t.status='complete';}
+    task.status='done';log(t,task.label+'完成');
+  }catch(e){t.status='failed';task.status='failed';t.error=(e.message||'工具未返回可用结果').slice(0,240);log(t,task.label+'失败：'+t.error);}
+  finally{t.metrics.elapsedMs+=Date.now()-started;t.updatedAt=timestamp();compress(t);}
+  return t;
+}
+
+return {action,benchmarks,createThread,problem,registry,step,subjects};
+})();
+const {api} = (() => {
+
+
+const json=(body,status=200,headers={})=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store',...headers}});
+const MAX_LEASE=90000;
+async function input(request){
+  if(!request.headers.get('content-type')?.includes('application/json'))throw problem('需要 JSON 请求',415);
+  const raw=await request.text();if(raw.length>4096)throw problem('内容过长',413);
+  try{const v=JSON.parse(raw||'{}');if(!v||typeof v!=='object'||Array.isArray(v))throw Error();return v;}catch{throw problem('JSON 格式无效');}
+}
+function summary(t){const {id,title,mode,status,updatedAt,createdAt,symbol,benchmark,days,goal}=t;return {id,title,mode,status,updatedAt,createdAt,symbol,benchmark,days,goal};}
+function view(t){const {lease,...rest}=t;return rest;}
+function followup(t,q){
+  const facts=t.report?.facts||[];const c=t.evidence.find(x=>x.id==='C1');
+  if(/建议|买|卖|预测|目标价/.test(q))return {answer:'当前简报只核查历史数据。交易建议和预测超出了研究范围。',refs:[]};
+  if(/样本|分母|覆盖|成分|普涨/.test(q))return {answer:'这条线程查询的是指数收盘点位。没有成分股明细，也没有普涨率分母，无法核查上涨覆盖面。',refs:c?['E1','E2']:[]};
+  if(/时点|窗口|交易日|多少天|起止|日期/.test(q)&&c)return {answer:'区间从 '+c.raw.start+' 到 '+c.raw.end+'，共 '+t.days+' 个收益间隔，包含期初在内有 '+(t.days+1)+' 个收盘点位。',refs:['E1','E2','C1']};
+  const key=/回撤|风险|跌幅/.test(q)?'回撤':/前一|上期|上一/.test(q)?'前一':/收益|比较|基准|相对/.test(q)?'百分点':null;
+  const match=key&&facts.find(f=>f.text.includes(key));
+  return match?{answer:match.text,refs:match.refs}:{answer:'现有证据无法回答这个问题。可以追问区间收益、回撤、样本范围或上一窗口。',refs:[]};
+}
+async function api(request,env,store){
+  const path=new URL(request.url).pathname;
+  try{
+    if(request.method==='POST'&&request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)throw problem('请求来源无效',403);
+    const prefsKey='preferences',prefs=(await store.get(prefsKey))?.value||{benchmark:'000300.SH',days:5};
+    if(path==='/api/meta'&&request.method==='GET')return json({subjects,benchmarks,modes:['demo','live'],preferences:prefs,registry});
+    if(path==='/api/threads'&&request.method==='GET'){
+      const threads=(await store.list('thread/')).map(summary).sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));return json({threads});
+    }
+    if(path==='/api/threads'&&request.method==='POST'){
+      const v=await input(request);const t=createThread(v);t.revision=1;
+      if(!(await store.put('thread/'+t.id,t,null)))throw problem('创建冲突',409);
+      if(v.remember===true)await store.put(prefsKey,{benchmark:t.benchmark,days:t.days});
+      return json(view(t),201);
+    }
+    const m=path.match(/^\/api\/threads\/([a-f0-9-]{36})(?:\/(\w+))?$/);
+    if(!m)throw problem('页面或工具不存在',404);
+    const key='thread/'+m[1],entry=await store.get(key);if(!entry)throw problem('线程不存在',404);
+    const t=entry.value;
+    if(!m[2]&&request.method==='GET')return json(view(t));
+    if(request.method!=='POST')throw problem('请求方式不支持',405);
+    const v=await input(request);
+    if(m[2]==='followup'){if(!String(v.question||'').trim())throw problem('请输入问题');return json(followup(t,String(v.question)));}
+    if(t.lease&&t.lease.until>Date.now())throw problem('当前工具仍在执行，稍后可继续',409);
+    if(v.revision!==undefined&&v.revision!==t.revision)throw problem('线程已更新，请读取最新检查点',409);
+    if(m[2]==='step'){
+      if(t.status!=='running')throw problem('线程未在运行',409);
+      t.lease={until:Date.now()+MAX_LEASE};const locked=await store.put(key,t,entry.tag);
+      if(!locked)throw problem('线程正由另一窗口执行',409);
+      await step(t,env);delete t.lease;t.revision++;t.updatedAt=new Date().toISOString();
+      if(!await store.put(key,t,locked))throw problem('执行权已更新，请刷新',409);
+    }else{
+      action(t,m[2]);delete t.lease;t.revision++;
+      if(!await store.put(key,t,entry.tag))throw problem('线程已更新',409);
+    }
+    return json(view(t));
+  }catch(e){return json({error:e.status?e.message:'服务暂时不可用，请稍后再试。'},e.status||503);}
+}
+
+return {api};
+})();
+// Injected only into the single-file demonstration. All records stay on this device.
+const storagePrefix='xbuddy-offline-v1/';
+const offlineStore={
+  async get(key){return JSON.parse(localStorage.getItem(storagePrefix+key)||'null');},
+  async list(prefix){return Object.keys(localStorage).filter(k=>k.startsWith(storagePrefix+prefix)).map(k=>JSON.parse(localStorage.getItem(k)).value);},
+  async put(key,value,expected){
+    const k=storagePrefix+key;
+    const prior=JSON.parse(localStorage.getItem(k)||'null');
+    if(expected!==undefined&&(prior?.tag??null)!==expected)return null;
+    const tag=crypto.randomUUID();
+    localStorage.setItem(k,JSON.stringify({value,tag}));return tag;
+  }
+};
+async function offlineRequest(path,opts){
+  if(opts.body && JSON.parse(opts.body).mode==='live')return new Response('{"error":"离线演练仅支持构造数据"}',{status:400});
+  const response=await api(new Request('https://offline.invalid'+path,opts),{},offlineStore);
+  if(path==='/api/meta'){
+    const meta=await response.json();meta.modes=['demo'];return Response.json(meta);
+  }
+  return response;
+}
+
+;(()=>{'use strict';
+
+const byId = (id) => document.getElementById(id);
+const main = byId('main');
+const labels = { running: '执行中', approval: '等待审批', paused: '已暂停', failed: '执行失败', partial: '阶段性完成', complete: '已完成', pending: '待执行', completed: '已完成', done: '已完成', waiting: '等待中', skipped: '已跳过', stopped: '已停止', active: '执行中', queued: '待执行', blocked:'待处理' };
+const modes = { demo:'演练 · 构造数据',live:'在线 · 真实数据源' };
+const state = {meta:null, threads:[], thread:null, tab:'tasks', auto:false, timer:0, epoch:0, busy:false, stepping:false, pendingStop:false, replies:new Map(), fieldDraft:null, toastTimer:0};
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (s) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+const e = escapeHtml;
+function formatDate(value, short=false) {
+  const d = new Date(value);
+  if (!value || Number.isNaN(d.getTime())) return '—';
+  return new Intl.DateTimeFormat('zh-CN', {timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',...(!short && {year:'numeric'}),hour:'2-digit',minute:'2-digit', hour12:false}).format(d);
+}
+function statusPill(status) {
+  const mood = ({failed:'error',paused:'warn',approval:'warn',partial:'warn',running:'running'})[status] || '';
+  return '<span class="pill '+mood+'">'+e(labels[status] || status || '未知')+'</span>';
+}
+function showNotice(message) {
+  clearTimeout(state.toastTimer);
+  const el = byId('notice');
+  el.textContent= message; el.hidden=false;
+  state.toastTimer=setTimeout(()=>el.hidden=true,6000);
+}
+async function request(path, body) {
+  const options = {headers:{Accept:'application/json'},cache:'no-store'};
+  if(body!==undefined){options.method='POST'; options.headers['Content-Type']='application/json'; options.body=JSON.stringify(body);}
+  let res;
+  try {res=await offlineRequest('/api/'+path,options);}
+  catch {throw new Error('无法连接工作台，请检查网络连接后重试。');}
+  let data;
+  try{data=await res.json();}catch{throw new Error('工作台返回了无法读取的响应（HTTP '+res.status+'）。');}
+  if(!res.ok){const err=new Error(typeof data.error==='string' ? data.error : (data.message || '请求未完成（HTTP '+res.status+'）'));err.status=res.status;throw err;}
+  return data;
+}
+function closeDrawer(){byId('rail').classList.remove('open');byId('menu').setAttribute('aria-expanded','false');byId('shade').hidden=true;}
+function pageHeading(title, description='') {
+  return '<div class="heading"><div><h1>'+e(title)+'</h1>'+(description ? '<p>'+e(description)+'</p>':'')+'</div></div>';
+}
+function showFatal(message) {
+  main.innerHTML=pageHeading('研究工作台')+'<div class="box box-inner"><h3>工作区暂时无法打开</h3><p class="message error" role="alert">'+e(message)+'</p><button class="secondary" id="reload">重新载入</button></div>';
+  byId('reload').onclick=()=>location.reload();
+}
+function threadLink(t){
+  return '<button class="thread" data-thread="'+e(t.id)+'" aria-current="'+(state.thread?.id===t.id)+'"><span class="thread-icon" aria-hidden="true">▤</span><span class="title"><strong>'+e(t.title||t.goal)+'</strong><small>'+e(labels[t.status]||t.status)+' · '+e(formatDate(t.updatedAt,true))+'</small></span></button>';
+}
+function sidebar(){
+  byId('thread-count').textContent=state.threads.length;
+  byId('threads').innerHTML=state.threads.length ? state.threads.map(threadLink).join('') : '<p class="rail-empty">发起研究后，线程会保存在这里。</p>';
+}
+function saveThread(t){
+  state.thread=t;
+  state.threads= [t,...state.threads.filter(item=>item.id!==t.id)].sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)));
+  sidebar();
+}
+function menuClick(id){const next=id ? '#thread/'+encodeURIComponent(id) : '#new'; if(location.hash===next){route();}else{location.hash=next;}}
+function stopClock(){state.auto=false;clearTimeout(state.timer);}
+function options(items,selected){return items.map(o=>'<option value="'+e(o.symbol)+'" '+(o.symbol===selected?'selected':'')+'>'+e(o.name)+' · '+e(o.symbol)+'</option>').join('');}
+function templates(){
+  const subj=byId('symbol')?.selectedOptions[0]?.textContent.split(' · ')[0] || '研究指数';
+  const bench=byId('benchmark')?.selectedOptions[0]?.textContent.split(' · ')[0] || '基准指数';
+  const days=byId('days')?.value || '5';
+  return [
+    {name:'指数相对表现',desc:'同区间比较指数收益与基准差异',goal:'复盘'+subj+'最近 '+days+' 个交易日相对'+bench+'的表现。列出区间收益、相对收益及计算依据。'},
+    {name:'回撤与风险',desc:'检查区间内的下行波动',goal:'比较'+subj+'与'+bench+'最近 '+days+' 个交易日的收益和风险。核查区间内最大回撤，说明样本局限。'},
+    {name:'晨会复盘简报',desc:'以事实、解读和待核查项交付',goal:'整理'+subj+'最近 '+days+' 个交易日的晨会简报，以'+bench+'为基准。分别列出事实、解释和待验证问题，并附原始依据。'}
+  ];
+}
+function setTemplate(index){const t=templates()[index];if(!t)return;byId('goal').value=t.goal;byId('goal').dataset.template=String(index);byId('goal').focus();}
+function compose(){
+  const {subjects=[],benchmarks=[],preferences={}}=state.meta;
+  const draft=state.fieldDraft||{};
+  const symbol=draft.symbol||subjects[0]?.symbol;
+  const benchmark=draft.benchmark||preferences.benchmark||benchmarks.find(o=>o.symbol!==symbol)?.symbol;
+  const days=draft.days||preferences.days||5;
+  const allowedDays=state.meta.windows||state.meta.days||[5,10,20];
+  const dayChoices=Array.isArray(allowedDays) ? allowedDays : [5,10,20];
+  const selectedMode=draft.mode||'demo';
+  byId('breadcrumb').textContent='研究工作台';
+  main.innerHTML=pageHeading('研究工作台','设置比较口径，发起一次有据可查的指数研究。')+
+    '<div class="home-grid"><section class="box compose"><div class="compose-top"><h2>新建研究任务</h2><p>指数对比与风险复盘</p></div><form class="form-body" id="composer">'+
+    '<label class="field"><span>研究目标</span><textarea id="goal" maxlength="500" required rows="3" placeholder="描述你希望回答的问题">'+e(draft.goal||'')+'</textarea></label>'+
+    '<div class="fields"><label class="field"><span>研究指数</span><select required id="symbol">'+options(subjects,symbol)+'</select></label>'+
+    '<label class="field"><span>比较基准</span><select required id="benchmark">'+options(benchmarks,benchmark)+'</select></label>'+
+    '<label class="field"><span>观察窗口</span><select id="days">'+dayChoices.map(d=>'<option value="'+e(d)+'" '+(Number(d)===Number(days)?'selected':'')+'>'+e(d)+' 个交易日</option>').join('')+'</select></label></div>'+
+    '<fieldset class="mode-switch"><legend>数据来源</legend>'+state.meta.modes.map(mode=>'<label><input type="radio" name="mode" value="'+e(mode)+'" '+(mode===selectedMode?'checked':'')+'><span>'+e(modes[mode]||mode)+'</span></label>').join('')+'</fieldset>'+
+    '<p id="mode-hint" class="help"></p><label class="remember"><input type="checkbox" id="remember" '+(draft.remember?'checked':'')+'> 记住基准和观察窗口</label><div id="form-error" role="alert"></div><div class="btn-row end"><button class="primary" id="run" type="submit">开始研究 <span aria-hidden="true">→</span></button></div></form></section>'+
+    '<aside class="side-stack"><section class="box box-inner templates"><div class="section-head"><h3>研究模板</h3></div>'+[
+      ['指数相对表现','同区间比较指数收益与基准差异'],
+      ['回撤与风险','检查区间内的下行波动'],
+      ['晨会复盘简报','以事实、解读和待核查项交付']
+    ].map(([name,desc],i)=>'<button class="template" data-template="'+i+'"><strong>'+e(name)+' <span aria-hidden="true">↗</span></strong><small>'+e(desc)+'</small></button>').join('')+'</section></aside></div>'+
+    (state.threads.length?'<section class="history"><div class="section-head"><h2>最近研究</h2></div><div class="history-grid">'+state.threads.slice(0,3).map(t=>'<button class="history-card" data-thread="'+e(t.id)+'">'+statusPill(t.status)+'<strong>'+e(t.title||t.goal)+'</strong><span class="muted">'+e(formatDate(t.updatedAt))+' · '+e(t.mode==='live'?'在线查询':'构造数据')+'</span></button>').join('')+'</div></section>':'');
+  if(!draft.goal){byId('goal').value=templates()[0].goal;byId('goal').dataset.template='0';}
+  function modeHint(){
+    const live=byId('composer').querySelector('input[name="mode"]:checked')?.value==='live';
+    byId('mode-hint').textContent=live?'根据服务端权限请求金融数据，并记录实际时点。':'使用固定日期的构造行情走完研究流程，数值仅供核验计算。';
+  }
+  byId('composer').querySelectorAll('input[name="mode"]').forEach(input=>input.addEventListener('change',modeHint));modeHint();
+  byId('goal').addEventListener('input',()=>delete byId('goal').dataset.template);
+  for(const id of ['symbol','benchmark','days']){
+    byId(id).addEventListener('change',()=>{const ta=byId('goal');if(ta.dataset.template!==undefined)ta.value=templates()[Number(ta.dataset.template)].goal;});
+  }
+  byId('composer').addEventListener('submit',createThread);
+}
+async function createThread(ev){
+  ev.preventDefault();
+  if(state.busy)return;
+  const payload={goal:byId('goal').value.trim(),mode:new FormData(ev.currentTarget).get('mode'),symbol:byId('symbol').value,benchmark:byId('benchmark').value,days:Number(byId('days').value),remember:byId('remember').checked};
+  const error=byId('form-error');
+  function fail(message){error.className='message error';error.textContent=message;}
+  if(!payload.goal)return fail('请输入研究目标。');
+  if(payload.symbol===payload.benchmark)return fail('请选择与研究指数不同的比较基准。');
+  state.busy=true;byId('run').disabled=true;byId('run').textContent='正在创建…';state.fieldDraft=payload;
+  try{
+    const t=await request('threads',payload);
+    if(payload.remember)state.meta.preferences={benchmark:payload.benchmark,days:payload.days};
+    history.pushState(null,'','#thread/'+encodeURIComponent(t.id));state.fieldDraft=null;state.epoch++;state.tab=t.report?'report':'tasks';saveThread(t);state.auto=t.status==='running';detail();schedule();
+  }catch(err){if(error.isConnected)fail(err.message);}
+  finally{state.busy=false;const btn=byId('run');if(btn){btn.disabled=false;btn.textContent='开始研究 →';}}
+}
+function toolbutton(action,text,kind='secondary'){return '<button type="button" class="'+kind+'" data-action="'+action+'">'+text+'</button>';}
+function actions(t){
+  if(t.status==='approval')return '<div class="message warn" role="status"><strong>研究范围需要确认</strong><p>'+e(t.approval||'是否允许执行下一项扩展调查？')+'</p><div class="btn-row">'+toolbutton('approve','批准并继续','primary')+toolbutton('skip','跳过扩展调查')+toolbutton('finish','交付阶段简报','quiet')+'</div></div>';
+  if(t.status==='failed')return '<div class="message error"><strong>步骤未完成</strong><p>'+e(t.error||'请检查调用记录。')+'</p><div class="btn-row">'+toolbutton('retry','重试失败步骤','primary')+toolbutton('finish','生成阶段性结果')+'</div></div>';
+  if(t.status==='paused')return '<div class="message"><strong>已保存检查点</strong><p>恢复后会复用此前已完成的步骤。</p><div class="btn-row">'+toolbutton('resume','恢复研究','primary')+toolbutton('finish','生成阶段性结果')+'</div></div>';
+  if(t.status==='running'&&state.pendingStop)return '<span class="pill warn" role="status">当前工具完成后暂停</span>';
+  if(t.status==='running')return '<div class="btn-row">'+(state.auto?'':toolbutton('continue','从检查点继续','primary'))+toolbutton('stop','暂停研究')+'</div>';
+  return '';
+}
+function renderTasks(t){return '<div class="section-head"><h2>执行计划</h2><small>'+e((t.tasks||[]).length)+' 项任务</small></div>'+((t.tasks||[]).map((task,i)=>'<div class="step"><span class="num '+(['done','complete','completed'].includes(task.status)?'done':'')+'">'+String(i+1).padStart(2,'0')+'</span><div class="step-content"><div class="row wrap"><strong>'+e(task.label)+'</strong>'+statusPill(task.status)+'</div>'+(task.detail?'<p>'+e(task.detail)+'</p>':'')+'</div></div>').join('')||'<div class="empty">等待生成执行计划。</div>');}
+function safeUrl(value){try{const u=new URL(value);return /^https?:$/.test(u.protocol)?u.href:null;}catch{return null;}}
+function kv(key,value){return '<div class="kv"><span>'+e(key)+'</span><strong>'+e(value??'—')+'</strong></div>';}
+function evidenceSection(t){
+  return '<div class="section-head"><h2>研究证据</h2><small>'+e(t.evidence.length)+' 项</small></div>'+(t.evidence.length?t.evidence.map(ev=>{
+    const url=safeUrl(ev.url);
+    return '<details class="record" data-evidence="'+e(ev.id)+'"><summary><span class="mono">'+e(ev.id)+'</span> · '+e(ev.label)+'</summary>'+kv('来源',ev.source)+kv('数据时点',ev.asOf)+kv('单位',ev.unit)+kv('口径',ev.method)+(url?'<a href="'+e(url)+'" target="_blank" rel="noopener noreferrer">打开来源 ↗</a>':'')+'<p>原始字段或计算输入</p><pre class="raw">'+e(JSON.stringify(ev.raw,null,2))+'</pre></details>';
+  }).join(''):'<p class="empty">成功取数后，这里会保存来源、时点、单位和原始字段。</p>');
+}
+function exportReport(t){
+  const r=t.report;if(!r)return;
+  const lines=['# '+r.title,'',t.mode==='live'?'模式：在线查询':'模式：构造数据演练','',t.goal,'','## 事实',...r.facts.map(f=>'- '+f.text+' '+(f.refs||[]).map(id=>'['+id+']').join(' ')),'','## 解读',...r.interpretation.map(v=>'- '+v),'','## 待验证',...r.unknowns.map(v=>'- '+v),'','## 证据索引',...t.evidence.flatMap(v=>['- '+v.id+' '+v.label+'｜'+v.source+'｜'+v.asOf+'｜'+v.unit+'｜'+v.method,...(safeUrl(v.url)?['  '+safeUrl(v.url)]:[])])];
+  const objectUrl=URL.createObjectURL(new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'}));const a=document.createElement('a');a.href=objectUrl;a.download='研究简报-'+t.id+'.md';a.click();setTimeout(()=>URL.revokeObjectURL(objectUrl),1000);
+}
+function reportSection(t){
+  if(!t.report)return '<div class="section-head"><h2>研究简报</h2></div><div class="empty">研究完成或阶段性结束后，在这里查看简报。</div>';
+  const r=t.report;
+  function block(title,items){return '<section class="report-block"><h3>'+title+'</h3>'+(items.length?'<ul>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ul>':'<p class="muted">暂无记录。</p>')+'</section>';}
+  return '<div class="section-head"><h2>'+e(r.title)+'</h2><button class="secondary" id="download">下载简报 ↓</button></div>'+chartMarkup(t)+block('已核实事实',r.facts.map(f=>e(f.text)+' '+(f.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')))+block('研究解读',r.interpretation.map(e))+block('仍待验证',r.unknowns.map(e))+followupMarkup(t);
+}
+function chartMarkup(t){
+  const c=t.evidence.find(item=>item.id==='C1')?.raw;if(!c?.series?.length)return '';
+  const format=n=>Number.isFinite(n)?(n>0?'+':'')+n.toFixed(2):'—';
+  return '<figure class="chart"><figcaption><strong>区间累计收益</strong><small>'+e(c.start)+' — '+e(c.end)+'</small></figcaption>'+
+    '<div class="chart-legend"><span><i></i>'+e(nameOf(t.symbol))+' <b>'+format(c.targetPct)+'%</b></span><span><i></i>'+e(nameOf(t.benchmark))+' <b>'+format(c.benchmarkPct)+'%</b></span></div>'+
+    '<canvas id="returns-chart" role="img" aria-label="研究指数与基准相对期初的累计收益折线，原始数据见下方证据 C1"></canvas>'+
+    '<div class="chart-foot"><span>相对期初收盘 · 单位 %</span><button data-ref="C1" class="ref">查看计算依据 C1</button></div></figure>';
+}
+function paintChart(t){
+  const canvas=byId('returns-chart'); if(!canvas)return;
+  const series=t.evidence.find(item=>item.id==='C1')?.raw.series||[];
+  const ctx=canvas.getContext('2d'); if(series.length<2||!ctx)return;
+  const values=series.flatMap(row=>[row.targetPct,row.benchmarkPct]);if(!values.every(Number.isFinite))return;
+  const w=Math.max(220,canvas.clientWidth),h=150,scale=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=w*scale;canvas.height=h*scale;ctx.scale(scale,scale);
+  const min=Math.min(0,...values), max=Math.max(0,...values), pad=Math.max((max-min)*.12,.02);
+  const low=min-pad,high=max+pad, left=42,right=w-12,top=12,bottom=h-22;
+  const px=i=>left+(right-left)*i/(series.length-1), py=n=>bottom-(bottom-top)*(n-low)/(high-low);
+  ctx.font='10px monospace';ctx.textBaseline='middle';ctx.fillStyle='#596c62';
+  for(const n of [...new Set([max,0,min])]){
+    const y=py(n);ctx.fillText(n.toFixed(1)+'%',0,y);ctx.beginPath();ctx.strokeStyle=n===0?'#a0afa0':'#dce2d8';ctx.moveTo(left,y);ctx.lineTo(right,y);ctx.stroke();
+  }
+  function line(key,color){
+    ctx.beginPath();series.forEach((row,i)=>{if(i)ctx.lineTo(px(i),py(row[key]));else ctx.moveTo(px(i),py(row[key]));});
+    ctx.lineJoin='round';ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+    ctx.beginPath();ctx.arc(right,py(series.at(-1)[key]),3,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();
+  }
+  line('benchmarkPct','#a2854e');line('targetPct','#226354');
+  ctx.fillStyle='#596c62';ctx.fillText(String(series[0].date).slice(5),left,h-7);ctx.textAlign='right';ctx.fillText(String(series.at(-1).date).slice(5),right,h-7);
+}
+function followupMarkup(t){
+  const reply=state.replies.get(t.id);
+  return '<form class="followup" id="followup"><label class="field"><span>追问这份简报</span><input type="text" id="question" required maxlength="300" placeholder="例如，本次复盘使用了哪些日期？"></label><button class="secondary" type="submit">核查证据</button></form>'+
+    (reply?'<div class="message" role="status"><strong>'+e(reply.question)+'</strong><p>'+e(reply.answer)+'</p>'+(reply.refs||[]).map(id=>'<button class="ref" data-ref="'+e(id)+'">'+e(id)+'</button>').join(' ')+'</div>':'');
+}
+document.addEventListener('submit',async ev=>{
+  if(ev.target.id!=='followup')return;ev.preventDefault();const question=byId('question').value.trim(),t=state.thread,epoch=state.epoch;if(!question||!t)return;
+  const btn=ev.target.querySelector('button');btn.disabled=true;btn.textContent='核查中…';
+  try{const reply=await request('threads/'+encodeURIComponent(t.id)+'/followup',{question});state.replies.set(t.id,{...reply,question});if(state.epoch===epoch){detail();byId('question')?.focus();}}
+  catch(err){showNotice(err.message);btn.disabled=false;btn.textContent='核查证据';}
+});
+let resizeTimer;
+window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(state.thread)paintChart(state.thread);},100);});
+function eventSection(t){return '<div class="section-head"><h2>运行记录</h2></div>'+([...(t.events||[])].reverse().map(ev=>'<div class="event"><time>'+e(formatDate(ev.at,true))+'</time><div>'+e(ev.text)+'</div></div>').join('')||'<div class="empty">暂无运行记录。</div>');}
+function nameOf(symbol){return [...state.meta.subjects,...state.meta.benchmarks].find(x=>x.symbol===symbol)?.name||symbol;}
+function registryMarkup(t){
+  const registry=state.meta.registry;
+  if(!registry||!Object.keys(registry).length)return '';
+  const permissions={model:'模型调用',read:'只读查询',compute:'本地计算',approval:'需额外批准'};
+  return '<details class="tools-list"><summary>查看工具与权限</summary>'+t.tasks.filter(task=>registry[task.id]).map(task=>{
+    const tool=registry[task.id];return kv(tool.label,permissions[tool.permission]||tool.permission);
+  }).join('')+'</details>';
+}
+function detail(){
+  const t=state.thread;if(!t)return;
+  const open=new Set([...main.querySelectorAll('details[open][data-evidence]')].map(d=>d.dataset.evidence));
+  byId('breadcrumb').textContent='研究线程';
+  const tm=t.metrics||{};
+  const views={tasks:renderTasks,evidence:evidenceSection,report:reportSection,events:eventSection};
+  main.innerHTML=pageHeading(t.title||'研究线程')+'<section class="box detail-hero"><div class="row wrap"><span class="label">研究目标</span>'+statusPill(t.status)+'</div><p class="goal">'+e(t.goal)+'</p>'+actions(t)+'</section>'+
+    '<div class="detail-grid"><div class="box box-inner"><nav class="tabs" aria-label="线程视图">'+Object.entries({tasks:'任务',evidence:'证据 '+t.evidence.length,report:'简报',events:'日志'}).map(([key,label])=>'<button data-tab="'+key+'" aria-pressed="'+(key===state.tab)+'">'+e(label)+'</button>').join('')+'</nav><div id="view">'+views[state.tab](t)+'</div></div><aside class="side-stack"><section class="box box-inner"><div class="section-head"><h3>研究口径</h3></div>'+kv('运行模式',modes[t.mode])+kv('研究指数',nameOf(t.symbol))+kv('比较基准',nameOf(t.benchmark))+kv('观察窗口',t.days+' 个交易日')+'</section><section class="box box-inner"><div class="section-head"><h3>执行用量</h3></div>'+kv('调用次数',(tm.calls??0)+' / '+(tm.limit??'—'))+kv('累计耗时',((tm.elapsedMs||0)/1000).toFixed(1)+' s')+kv('模型 Token',tm.tokens??0)+registryMarkup(t)+'</section>'+(t.summary?'<section class="box box-inner"><div class="section-head"><h3>压缩上下文</h3></div><p class="context">'+e(t.summary)+'</p></section>':'')+'</aside></div>';
+  if(state.tab==='evidence') main.querySelectorAll('[data-evidence]').forEach(d=>{if(open.has(d.dataset.evidence))d.open=true;});
+  paintChart(t);
+  if(state.busy&&t.status!=='running')main.querySelectorAll('[data-action]').forEach(b=>b.disabled=true);
+}
+function schedule(){
+  clearTimeout(state.timer);
+  if(state.auto&&state.thread?.status==='running')state.timer=setTimeout(step,500);
+}
+async function syncThread(id,epoch){
+  const t=await request('threads/'+encodeURIComponent(id));if(epoch!==state.epoch)return;saveThread(t);detail();
+}
+async function step(){
+  const t=state.thread;
+  if(!state.auto||!t||t.status!=='running'||state.stepping)return;
+  const epoch=state.epoch;state.stepping=true;
+  try{
+    const next=await request('threads/'+encodeURIComponent(t.id)+'/step',{revision:t.revision});
+    if(epoch!==state.epoch)return;
+    if(next.status!=='running')stopClock();
+    if(next.report&&!t.report)state.tab='report';
+    saveThread(next);detail();
+  }catch(err){
+    if(epoch!==state.epoch)return;
+    stopClock(); showNotice(err.message);
+    try{await syncThread(t.id,epoch);}catch{detail();}
+  }finally{
+    state.stepping=false;
+    if(state.pendingStop&&epoch===state.epoch){state.pendingStop=false;if(state.thread.status==='running'){await action('stop');return;}detail();}
+    schedule();
+  }
+}
+async function action(name){
+  const t=state.thread;if(!t||state.busy)return;
+  if(name==='stop'&&state.stepping){stopClock();state.pendingStop=true;detail();return;}
+  if(name==='continue'){state.auto=true;detail();schedule();return;}
+  stopClock();const epoch=++state.epoch;state.busy=true;
+  main.querySelectorAll('[data-action]').forEach(el=>el.disabled=true);
+  try{
+    const next=await request('threads/'+encodeURIComponent(t.id)+'/'+encodeURIComponent(name),{revision:t.revision});
+    if(epoch!==state.epoch)return;
+    state.auto=next.status==='running'&&name!=='stop';if(next.report&&!t.report)state.tab='report';saveThread(next);
+  }catch(err){if(epoch===state.epoch){showNotice(err.message);try{await syncThread(t.id,epoch);}catch{}}}
+  finally{state.busy=false;if(epoch===state.epoch){detail();schedule();}}
+}
+async function route(){
+  const epoch=++state.epoch;stopClock();state.pendingStop=false;closeDrawer();
+  const match=location.hash.match(/^#thread\/(.+)$/);
+  if(!match){state.thread=null;sidebar();compose();return;}
+  let id;
+  try{id=decodeURIComponent(match[1]);const t=await request('threads/'+encodeURIComponent(id));if(epoch!==state.epoch)return;state.tab=t.report?'report':'tasks';saveThread(t);detail();}
+  catch(err){if(epoch!==state.epoch)return;state.thread=null;sidebar();showFatal(err.message);}
+}
+document.addEventListener('click',ev=>{
+  const btn=ev.target.closest('button');if(!btn)return;
+  if(btn.dataset.thread!==undefined){closeDrawer();menuClick(btn.dataset.thread);return;}
+  if(btn.dataset.template!==undefined){setTemplate(Number(btn.dataset.template));return;}
+  if(btn.dataset.tab){state.tab=btn.dataset.tab;detail();main.querySelector('[data-tab="'+state.tab+'"]')?.focus();return;}
+  if(btn.dataset.action){action(btn.dataset.action);return;}
+  if(btn.dataset.ref){state.tab='evidence';detail();const el=[...main.querySelectorAll('[data-evidence]')].find(item=>item.dataset.evidence===btn.dataset.ref);if(el){el.open=true;el.querySelector('summary').focus();el.scrollIntoView({block:'center'});}return;}
+  if(btn.id==='download')exportReport(state.thread);
+});
+async function init(){
+  byId('today').textContent=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',year:'numeric',month:'short',day:'numeric',weekday:'short'}).format(new Date());
+  byId('menu').onclick=()=>{byId('rail').classList.add('open');byId('shade').hidden=false;byId('menu').setAttribute('aria-expanded','true');byId('close-menu').focus();};
+  byId('shade').onclick=closeDrawer;byId('close-menu').onclick=()=>{closeDrawer();byId('menu').focus();};document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&byId('rail').classList.contains('open')){closeDrawer();byId('menu').focus();}});
+  byId('new-thread').onclick=()=>{state.fieldDraft=null;closeDrawer();if(state.meta)menuClick(null);};
+  main.innerHTML=pageHeading('研究工作台')+'<p class="muted" role="status">正在载入工作区…</p>';
+  try{
+    const meta=await request('meta');const history=await request('threads');state.meta=meta;state.threads=history.threads;sidebar();window.addEventListener('hashchange',route);await route();
+  }catch(err){showFatal(err.message);}
+}
+init();
+})();})();</script></body>
+</html>

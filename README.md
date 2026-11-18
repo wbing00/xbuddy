@@ -2,6 +2,10 @@
 
 面向晨会准备的 A 股研究工作台。研究员给出目标，选择一个指数、基准和 5 / 10 / 20 个交易日，取得包含原始收盘点位、区间比较、回撤及证据引用的简报。适合用“白酒概念相对沪深 300 的表现是否延续了前一期？”体验。行情差异以百分点展示，不作因果或交易判断。
 
+## 网页演练
+
+GitHub Pages 发布目录为 `main` 分支的 `/docs`。运行 `npm run build` 会把同一份自包含演练页面更新到 `docs/index.html`。启用 Pages 后可在 [研究工作台](https://wbing00.github.io/xbuddy/) 创建线程、审批扩展查询并导出简报。这个入口使用构造行情，在访问者的浏览器内保存进度。实数查询使用下文的服务端入口。
+
 ## 本地运行
 
 需要 Node.js 22.13 或更高版本，无第三方依赖。在这个源码目录中运行：
@@ -41,4 +45,4 @@ npm start
 
 [监督进度](PROGRESS.md) · [数据与账号验证](docs/provider-verification.md) · [AI 使用与测试记录](docs/validation.md)
 
-托管构建使用 .openai/hosting.json 的同一项目，服务端需 BUCKET 存储绑定和服务端密钥。对外提交需要完成源码推送、部署及独立访问验证。实际完成状态以进度记录为准。
+托管构建使用 .openai/hosting.json 的同一项目，服务端需 BUCKET 存储绑定和服务端密钥。[GitHub 源码仓库](https://github.com/wbing00/xbuddy) 已可访问。实际完成状态以进度记录为准。

@@ -20,6 +20,7 @@ const ui=(await read('public/app.js')).replace("await fetch('/api/'+path,options
 const offlineJS='(()=>{'+parts.join('\n')+'\n'+transport+'\n;(()=>{'+ui+'})();})();';
 const html=(await read('public/index.html'))
   .replace('<link rel="stylesheet" href="/style.css">',()=>'<style>'+assets['/style.css'][1]+'</style>')
-  .replace('<script src="/app.js" defer></script>','')
+  .replace('  <script src="/app.js" defer></script>','')
   .replace('</body>',()=>'<script>'+offlineJS.replace(/<\/script/gi,'<\\/script')+'</script></body>');
 await writeFile(new URL('dist/离线演练.html',root),html);
+await writeFile(new URL('docs/index.html',root),html);
