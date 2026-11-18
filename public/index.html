@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173e38">
+  <meta name="description" content="投资 X Buddy 个人研究工作台">
+  <title>投资 X Buddy · 研究工作台</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到研究工作区</a>
+  <div class="workspace">
+    <button class="shade" id="shade" type="button" aria-label="关闭导航" hidden></button>
+    <aside id="rail" class="rail" aria-label="工作台导航">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span><div><strong>X Buddy</strong><small>投资研究工作台</small></div><button id="close-menu" class="mobile iconbutton" aria-label="关闭导航">×</button></div>
+      <button id="new-thread" class="new-thread"><span aria-hidden="true">＋</span> 新建研究</button>
+      <div class="rail-heading">研究线程 <span id="thread-count">0</span></div>
+      <nav id="threads" aria-label="研究线程"></nav>
+      <div class="rail-foot"><span class="avatar" aria-hidden="true">研</span><div><strong>个人工作区</strong><small>投资研究员</small></div></div>
+    </aside>
+    <div class="surface">
+      <header class="topbar"><div><button class="mobile iconbutton" id="menu" aria-label="打开导航" aria-expanded="false" aria-controls="rail">☰</button><span>工作空间</span><b aria-hidden="true">/</b><strong id="breadcrumb">研究工作台</strong></div><time id="today"></time></header>
+      <main id="main" tabindex="-1"></main>
+    </div>
+  </div>
+  <div id="notice" class="notice" role="status" hidden></div>
+</body>
+</html>
