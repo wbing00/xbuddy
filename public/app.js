@@ -58,7 +58,7 @@ function menuClick(id){const next=id ? '#thread/'+encodeURIComponent(id) : '#new
 function stopClock(){state.auto=false;clearTimeout(state.timer);}
 function options(items,selected){return items.map(o=>'<option value="'+e(o.symbol)+'" '+(o.symbol===selected?'selected':'')+'>'+e(o.name)+' · '+e(o.symbol)+'</option>').join('');}
 function templates(){
-  const subj=byId('symbol')?.selectedOptions[0]?.textContent.split(' · ')[0] || '研究指数';
+  const subj=byId('symbol')?.value ? byId('symbol').selectedOptions[0].textContent.split(' · ')[0] : (byId('benchmark')?.value==='000001.SH'?'深证成指':'上证综指');
   const bench=byId('benchmark')?.selectedOptions[0]?.textContent.split(' · ')[0] || '基准指数';
   const days=byId('days')?.value || '5';
   return [
@@ -71,7 +71,7 @@ function setTemplate(index){const t=templates()[index];if(!t)return;byId('goal')
 function compose(){
   const {subjects=[],benchmarks=[],preferences={}}=state.meta;
   const draft=state.fieldDraft||{};
-  const symbol=draft.symbol||subjects[0]?.symbol;
+  const symbol=draft.symbol||'';
   const benchmark=draft.benchmark||preferences.benchmark||benchmarks.find(o=>o.symbol!==symbol)?.symbol;
   const days=draft.days||preferences.days||5;
   const allowedDays=state.meta.windows||state.meta.days||[5,10,20];
@@ -80,7 +80,7 @@ function compose(){
   main.innerHTML=pageHeading('研究工作台','设置比较口径，发起一次有据可查的指数研究。')+
     '<div class="home-grid"><section class="box compose"><div class="compose-top"><h2>新建研究任务</h2><p>指数对比与风险复盘</p></div><form class="form-body" id="composer">'+
     '<label class="field"><span>研究目标</span><textarea id="goal" maxlength="500" required rows="3" placeholder="描述你希望回答的问题">'+e(draft.goal||'')+'</textarea></label>'+
-    '<div class="fields"><label class="field"><span>研究指数</span><select required id="symbol">'+options(subjects,symbol)+'</select></label>'+
+    '<div class="fields"><label class="field"><span>研究指数</span><select id="symbol"><option value="">从研究目标识别</option>'+options(subjects,symbol)+'</select></label>'+
     '<label class="field"><span>比较基准</span><select required id="benchmark">'+options(benchmarks,benchmark)+'</select></label>'+
     '<label class="field"><span>观察窗口</span><select id="days">'+dayChoices.map(d=>'<option value="'+e(d)+'" '+(Number(d)===Number(days)?'selected':'')+'>'+e(d)+' 个交易日</option>').join('')+'</select></label></div>'+
     '<p class="help">行情来自扶摇交易日历与指数日线。</p><label class="remember"><input type="checkbox" id="remember" '+(draft.remember?'checked':'')+'> 记住基准和观察窗口</label><div id="form-error" role="alert"></div><div class="btn-row end"><button class="primary" id="run" type="submit">开始研究 <span aria-hidden="true">→</span></button></div></form></section>'+
@@ -90,7 +90,6 @@ function compose(){
       ['晨会复盘简报','以事实、解读和待核查项交付']
     ].map(([name,desc],i)=>'<button class="template" data-template="'+i+'"><strong>'+e(name)+' <span aria-hidden="true">↗</span></strong><small>'+e(desc)+'</small></button>').join('')+'</section></aside></div>'+
     (state.threads.length?'<section class="history"><div class="section-head"><h2>最近研究</h2></div><div class="history-grid">'+state.threads.slice(0,3).map(t=>'<button class="history-card" data-thread="'+e(t.id)+'">'+statusPill(t.status)+'<strong>'+e(t.title||t.goal)+'</strong><span class="muted">'+e(formatDate(t.updatedAt))+' · '+'在线查询'+'</span></button>').join('')+'</div></section>':'');
-  if(!draft.goal){byId('goal').value=templates()[0].goal;byId('goal').dataset.template='0';}
   byId('goal').addEventListener('input',()=>delete byId('goal').dataset.template);
   for(const id of ['symbol','benchmark','days']){
     byId(id).addEventListener('change',()=>{const ta=byId('goal');if(ta.dataset.template!==undefined)ta.value=templates()[Number(ta.dataset.template)].goal;});
@@ -104,7 +103,6 @@ async function createThread(ev){
   const error=byId('form-error');
   function fail(message){error.className='message error';error.textContent=message;}
   if(!payload.goal)return fail('请输入研究目标。');
-  if(payload.symbol===payload.benchmark)return fail('请选择与研究指数不同的比较基准。');
   state.busy=true;byId('run').disabled=true;byId('run').textContent='正在创建…';state.fieldDraft=payload;
   try{
     const t=await request('threads',payload);

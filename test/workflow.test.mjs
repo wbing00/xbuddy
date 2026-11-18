@@ -15,7 +15,12 @@ function client(env={}){
 }
 // Network boundary only: the tests run the same calendar and price adapters as the product.
 function marketEnv(){
-  return {FUYAO_API_KEY:'test-only',async fetch(input){
+  return {FUYAO_API_KEY:'test-only',DEEPSEEK_API_KEY:'test-only',async fetch(input,options){
+    if(new URL(input).hostname==='api.deepseek.com'){
+      const plan=JSON.parse(options.body).messages[0].content.includes('"supported"');
+      const content=JSON.stringify(plan?{supported:true,focus:'relative'}:{next:'extend'});
+      return Response.json({model:'test',choices:[{finish_reason:'stop',message:{content}}]});
+    }
     const url=new URL(input),params=url.searchParams;
     const calendar=url.pathname.endsWith('/trading-days');
     const dateParam=name=>Date.parse(params.get(name).replace(/^(....)(..)(..)$/,'$1-$2-$3')+'T00:00:00+08:00');
@@ -47,9 +52,10 @@ test('reviewer flow checkpoints, resumes, asks approval, cites reproducible numb
   assert.equal(first.raw.requestId,'test-request');
 });
 test('a failed live query never substitutes synthetic data; retry limit and partial report are enforced',async()=>{
-  const {call}=client();let t=(await call('threads',{...payload,mode:'live'}))[1];const path='threads/'+t.id;
+  const env=marketEnv(); delete env.FUYAO_API_KEY;
+  const {call}=client(env);let t=(await call('threads',{...payload,mode:'live'}))[1];const path='threads/'+t.id;
   const go=async a=>(t=(await call(path+'/'+a,{revision:t.revision}))[1]);
-  await go('step');assert.ok(t.events.some(e=>e.text.includes('模型规划不可用')));
+  await go('step');assert.equal(t.tasks[0].status,'done');
   for(let i=0;i<3;i++){if(i)await go('retry');await go('step');assert.equal(t.status,'failed');}
   assert.equal((await call(path+'/retry',{}))[0],400);
   await go('finish');assert.equal(t.status,'partial');assert.deepEqual(t.report.facts,[]);assert.equal(t.evidence.length,0);
@@ -62,7 +68,7 @@ test('concurrent step cannot consume a checkpoint twice, stale revisions rejecte
 test('trade directive terminates with zero external calls; invalid choices rejected',async()=>{
   const {call}=client();const t=(await call('threads',{...payload,goal:'告诉我该买哪只股票'}))[1];
   assert.equal(t.status,'partial');assert.equal(t.metrics.calls,0);
-  assert.equal((await call('threads',{...payload,symbol:payload.benchmark}))[0],400);
+  assert.equal((await call('threads',{...payload,goal:'核查沪深300最近的表现',symbol:payload.benchmark}))[0],400);
 });
 test('skipping optional expansion preserves the original research scope and data',async()=>{
   const {call}=client(marketEnv());let t=(await call('threads',payload))[1],url='threads/'+t.id;
@@ -112,4 +118,25 @@ test('archived sample threads are excluded from the workspace and cannot be resu
   assert.deepEqual((await call('threads'))[1].threads,[]);
   assert.equal((await call('threads/'+id))[0],410);
   assert.equal((await call('threads/'+id+'/step',{}))[0],410);
+});
+
+test('free text determines the research subject before any market query',async()=>{
+  const {call}=client(marketEnv());
+  const [s,error]=await call('threads',{...payload,goal:'分析黄金最近的表现'});
+  assert.equal(s,400);
+  assert.match(error.error,/黄金/);
+  assert.equal((await call('threads'))[1].threads.length,0);
+  const [,t]=await call('threads',{...payload,goal:'分析上证指数最近的表现'});
+  assert.equal(t.symbol,'000001.SH');
+  const path='threads/'+t.id+'/step';
+  await call(path,{});
+  const [,next]=await call(path,{});
+  assert.equal(next.evidence[0].raw.symbol,'000001.SH');
+});
+test('planner failure cannot advance to a market query for an unconfirmed target',async()=>{
+  const {call}=client();
+  const [,t]=await call('threads',{...payload,goal:'分析原油最近的表现'});
+  const [,next]=await call('threads/'+t.id+'/step',{});
+  assert.equal(next.status,'failed');
+  assert.equal(next.evidence.length,0);
 });
