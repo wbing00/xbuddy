@@ -196,7 +196,7 @@ test('free-form gold research asks a question, resolves a real directory symbol,
 });
 test('new question can initiate a different financial tool from the same report; provider failure produces a documented gap',async()=>{
   const now=Date.now(),paths=[];
-  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),deliver('E1','快照已取得'),use('stock_flow',{symbol:'600519.SH'}),{action:'answer',text:'资金接口无权限，已有快照无法回答净流入。',refs:['E1']}],url=>{
+  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),deliver('E1','快照已取得'),use('stock_snapshot',{symbol:'600000.SH'}),{action:'answer',text:'资金接口无权限，已有快照无法回答净流入。',refs:['E1']}],url=>{
     paths.push(url.pathname);
     return paths.length===1?upstream({timestamp:now,item:[{thscode:'600519.SH',latest_price:100}]}):Response.json({code:2003});
   });
@@ -204,10 +204,10 @@ test('new question can initiate a different financial tool from the same report;
   const go=async(a,b={})=>{const [status,next]=await call('threads/'+t.id+'/'+a,b);assert.equal(status,200);t=next;};
   while(t.status==='running')await go('step');
   const original=structuredClone(t.report);
-  await go('chat',{question:'资金流入有多少？'});
+  await go('chat',{question:'600000.SH 最新行情呢？'});
   while(t.chatRun?.status==='running')await go('step');
   assert.equal(t.status,'complete');assert.deepEqual(t.report,original);assert.match(t.chat.at(-1).text,/权限/);
-  assert.deepEqual(paths,['/api/a-share/prices/snapshot','/api/a-share/capital-flow/snapshot']);
+  assert.deepEqual(paths,['/api/a-share/prices/snapshot','/api/a-share/prices/snapshot']);
   assert.equal(t.evidence.length,1);assert.equal(t.previousReports.length,0);
 });
 test('new planner rejects unknown tools and fabricated citations',async()=>{
@@ -221,12 +221,12 @@ test('new planner rejects unknown tools and fabricated citations',async()=>{
 
 test('new agent persists approval before an extra read and records a skipped request',async()=>{
   let reads=0;
-  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),use('stock_flow',{symbol:'600519.SH'}),
+  const {call}=researcher([use('stock_snapshot',{symbol:'600519.SH'}),use('stock_snapshot',{symbol:'601318.SH'}),
     use('stock_snapshot',{symbol:'600000.SH'}),deliver('E1','范围内结果已核验')],url=>{
     reads++;
-    return upstream(url.pathname.includes('capital-flow')?{timestamp:Date.now(),large:{net_amount:123}}:{timestamp:Date.now(),item:[{thscode:'600519.SH',latest_price:123}]});
+    return upstream(url.pathname.includes('capital-flow')?{timestamp:Date.now(),large:{net_amount:123}}:{timestamp:Date.now(),item:[{thscode:url.searchParams.get('thscodes'),latest_price:123}]});
   });
-  const [,created]=await call('threads',{goal:'600519.SH 的快照和资金呢？也补充 600000.SH 快照。'});
+  const [,created]=await call('threads',{goal:'600519.SH、601318.SH、600000.SH 的快照呢？'});
   let t=created;
   const go=async a=>{const [s,v]=await call('threads/'+t.id+'/'+a,{revision:t.revision});assert.equal(s,200);t=v;};
   while(t.status==='running')await go('step');
@@ -239,7 +239,7 @@ test('new agent persists approval before an extra read and records a skipped req
 
 test('report chat survives reload, explains in place, and skips an optional lookup without editing research',async()=>{
   const decisions=[{action:'answer',text:'可以把它理解为两种指数在同一段时间的相对变化。',refs:['E1']},
-    use('stock_flow',{symbol:'600519.SH'}),{action:'answer',text:'目前只有价格资料，无法判断资金方向。',refs:[]}];
+    use('stock_snapshot',{symbol:'601318.SH'}),{action:'answer',text:'目前只有价格资料，无法判断资金方向。',refs:[]}];
   const {call,store,requests}=researcher(decisions,()=>assert.fail('unapproved external lookup'));
   const [,t]=await call('threads',{goal:'比较两组价格'});
   const report={title:t.goal,facts:[{text:'已记录两组价格',refs:['E1','E2']}],interpretation:[],unknowns:[]};
@@ -265,4 +265,21 @@ test('report chat survives reload, explains in place, and skips an optional look
   assert.equal(requests.at(-1).discussion[1].text,reloaded.chat[1].text);
   assert.deepEqual(requests.at(-1).tools,{});
   assert.equal(reloaded.chatRun,undefined);assert.deepEqual(reloaded.report,report);
+});
+
+test('failed supplementary query then duplicate selection and invalid report citation preserve the real snapshot',async()=>{
+  const symbol='600519.SH', reads=[];
+  const {call,requests}=researcher([use('stock_snapshot',{symbol}),use('stock_snapshot',{symbol:'600000.SH'}),
+    use('stock_snapshot',{symbol:'600000.SH'}),deliver('E2','无来源的结论')],url=>{
+    reads.push(url.pathname);
+    return reads.length===1?upstream({timestamp:Date.now(),item:[{thscode:symbol,latest_price:123}]}):Response.json({code:2004});
+  });
+  let [,t]=await call('threads',{goal:'比较600519.SH和600000.SH最新快照'});
+  for(let i=0;i<10&&t.status==='running';i++)[,t]=await call('threads/'+t.id+'/step',{revision:t.revision});
+  assert.equal(t.status,'partial');assert.equal(reads.length,2);
+  assert.equal(requests.at(-1).finalOnly,true);
+  assert.deepEqual(t.report.facts[0].refs,['E1']);assert.match(t.report.facts[0].text,/123/);
+  assert.match(t.report.unknowns.join(' '),/2004/);
+  assert.doesNotMatch(JSON.stringify(t.report),/无来源的结论/);
+  assert.ok(!Object.hasOwn(requests[0].tools,'stock_flow'));
 });
